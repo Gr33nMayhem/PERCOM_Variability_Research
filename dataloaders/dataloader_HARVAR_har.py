@@ -99,16 +99,18 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
             for activity in activity_dict.keys():
                 for key in user_dict.keys():
                     # check if the index of the device is the first
-                    if self.devices_to_load.index(device) == 0:
-                        data_x, data_y = self.load_from_csv(data_x, data_y, key, user_dict[key],
-                                                            activity_dict[activity],
-                                                            activity, root_path, device_dict[device], device, 0)
-                        length_from_first_device[key] = data_x.shape[0]
-                    else:
-                        data_x, data_y = self.load_from_csv(data_x, data_y, key, user_dict[key],
-                                                            activity_dict[activity],
-                                                            activity, root_path, device_dict[device], device,
-                                                            lengths_for_activities[activity][key])
+                    # Does not require cropping
+                    # if self.devices_to_load.index(device) == 0:
+                    data_x, data_y = self.load_from_csv(data_x, data_y, key, user_dict[key],
+                                                        activity_dict[activity],
+                                                        activity, root_path, device_dict[device], device, 0)
+                    length_from_first_device[key] = data_x.shape[0]
+                    # do not require cropping
+                    # else:
+                    #     data_x, data_y = self.load_from_csv(data_x, data_y, key, user_dict[key],
+                    #                                         activity_dict[activity],
+                    #                                         activity, root_path, device_dict[device], device,
+                    #                                         lengths_for_activities[activity][key])
                 # save the length of the first device per activity, so that it can be used for cropping
                 lengths_for_activities[activity] = length_from_first_device
             data_y = data_x.iloc[:, -1]
@@ -142,8 +144,9 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
             temp = self.extract_labelled_data_only(temp, participant_id, root_path)
         temp = temp[['Acc_X', 'Acc_Y', 'Acc_Z']]
         temp.columns = ['x', 'y', 'z']
-        if need_cropping != 0:
-            temp = temp[:need_cropping]
+        # Do not crop
+        # if need_cropping != 0:
+        #     temp = temp[:need_cropping]
         temp.reset_index(drop=True, inplace=True)
         subj = pd.DataFrame({'sub_id': (np.zeros(temp.shape[0]) + participant_num)})
         temp = subj.join(temp)
