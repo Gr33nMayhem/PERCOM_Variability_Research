@@ -510,42 +510,55 @@ class Exp(object):
                     finetuned_score_log.close()
 
     def prediction_test(self):
-        assert self.args.exp_mode == "Given"
-        model = self.build_model().to(self.device)
-        model.load_state_dict(torch.load(os.path.join(self.path, 'cv_0/best_vali.pth')))
-        model.eval()
+        # assert self.args.exp_mode == "Given"
+        # load the data
         dataset = data_dict[self.args.data_name](self.args)
-        dataset.update_train_val_test_keys()
-        test_loader = self._get_data(dataset, flag='test')
-        preds = []
-        trues = []
-        for i, (batch_x1, batch_x2, batch_y) in enumerate(test_loader):
-            if "cross" in self.args.model_type:
-                batch_x1 = batch_x1.double().to(self.device)
-                batch_x2 = batch_x2.double().to(self.device)
-                batch_y = batch_y.long().to(self.device)
-                # model prediction
-                if self.args.output_attention:
-                    outputs = self.model(batch_x1, batch_x2)[0]
+        num_of_cv = dataset.num_of_cv
+
+        for iter in range(num_of_cv):
+            model = self.build_model().to(self.device)
+            setting = self.get_setting_name()
+            path = os.path.join(self.args.to_save_path, 'logs/' + setting)
+            model.load_state_dict(torch.load(os.path.join(path, 'cv_' + str(iter) + '/final_best_vali.pth')))
+            model.eval()
+            dataset.update_train_val_test_keys()
+            test_loader = self._get_data(dataset, flag='test', weighted_sampler=self.args.weighted_sampler)
+            preds = []
+            trues = []
+            print("================ {} CV ======================".format(iter))
+            for i, (batch_x1, batch_x2, batch_y) in enumerate(test_loader):
+                if "cross" in self.args.model_type:
+                    batch_x1 = batch_x1.double().to(self.device)
+                    batch_x2 = batch_x2.double().to(self.device)
+                    batch_y = batch_y.long().to(self.device)
+                    # model prediction
+                    if self.args.output_attention:
+                        outputs = self.model(batch_x1, batch_x2)[0]
+                    else:
+                        outputs = self.model(batch_x1, batch_x2)
                 else:
-                    outputs = self.model(batch_x1, batch_x2)
-            else:
-                batch_x1 = batch_x1.double().to(self.device)
-                batch_y = batch_y.long().to(self.device)
+                    batch_x1 = batch_x1.double().to(self.device)
+                    batch_y = batch_y.long().to(self.device)
 
-                # model prediction
-                if self.args.output_attention:
-                    outputs = self.model(batch_x1)[0]
-                else:
-                    outputs = self.model(batch_x1)
+                    # model prediction
+                    if self.args.output_attention:
+                        outputs = self.model(batch_x1)[0]
+                    else:
+                        outputs = self.model(batch_x1)
 
-            preds.extend(list(np.argmax(outputs.detach().cpu().numpy(), axis=1)))
-            trues.extend(list(batch_y.detach().cpu().numpy()))
+                preds.extend(list(np.argmax(outputs.detach().cpu().numpy(), axis=1)))
+                trues.extend(list(batch_y.detach().cpu().numpy()))
 
-        acc = accuracy_score(preds, trues)
-        f_w = f1_score(trues, preds, average='weighted')
-        f_macro = f1_score(trues, preds, average='macro')
-        f_micro = f1_score(trues, preds, average='micro')
+            acc = accuracy_score(preds, trues)
+            f_w = f1_score(trues, preds, average='weighted')
+            f_macro = f1_score(trues, preds, average='macro')
+            f_micro = f1_score(trues, preds, average='micro')
+            print(
+                "Test Accuracy: {0:.7f}  Test weight F1: {1:.7f}  Test macro F1 {2:.7f}  Test micro F1 {3:.7f}".format(
+                    acc, f_w, f_macro, f_micro))
+            prediction_result_df = pd.DataFrame({'preds': preds, 'trues': trues})
+            prediction_result_df.to_csv(os.path.join(path, 'cv_' + str(iter) + '/prediction_result_' +
+                                                     self.args.devices_to_load[self.args.test_variant] + '.csv'))
 
         return preds, trues
 

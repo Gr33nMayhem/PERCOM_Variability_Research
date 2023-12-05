@@ -16,16 +16,8 @@ The method will train the CV models using three architectures: TinyHAR, Conv-LST
 
 :param data_set_index: the index of the sensor to be trained.
 '''
-devices = ['empatica-left',
-           'empatica-right',
-           'bluesense-LUA',
-           'bluesense-LWR',
-           'bluesense-RUA',
-           'bluesense-RWR1',
-           'bluesense-RWR2',
-           'bluesense-TRS',
-           'maxim-red',
-           'maxim-green']
+devices = ['bluesense-RWR1',
+           'bluesense-RWR2']
 
 
 def run_train_process_with_data(data_set_index):
