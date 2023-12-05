@@ -115,7 +115,7 @@ def run_train_process_with_data(data_set_index):
     else:
         args.f_in = 1
 
-    args.model_type = "tinyhar"  # "deepconvlstm"#"sahar" #"deepconvlstm"
+    args.model_type = "tinyhar"
 
     args.cross_channel_interaction_type = "attn"
     args.cross_channel_aggregation_type = "FC"
@@ -138,7 +138,7 @@ def run_train_process_with_data(data_set_index):
 
     exp.train()
 
-    args.model_type = "attend"  # "deepconvlstm"#"sahar" #"deepconvlstm"
+    args.model_type = "attend"
 
     exp = Exp(args)
     macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
