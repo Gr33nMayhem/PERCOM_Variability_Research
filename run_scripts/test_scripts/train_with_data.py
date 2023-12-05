@@ -99,7 +99,7 @@ def run_train_process_with_data(data_set_index):
 
     args.train_variant = data_set_index
     args.test_variant = data_set_index
-    args.variation_count = 2
+    args.variation_count = 1
 
     if args.difference:
         args.c_in = args.c_in * 2
