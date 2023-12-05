@@ -5,7 +5,7 @@
 #SBATCH --mem=32G
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=8
-#SBATCH --time=1:0:0
+#SBATCH --time=12:0:0
 #SBATCH --mail-user=Gr33nMayhem@gmail.com
 #SBATCH --mail-type=ALL
 
