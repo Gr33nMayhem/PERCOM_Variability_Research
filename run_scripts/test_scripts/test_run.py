@@ -1,13 +1,14 @@
 import sys
-
-sys.path.append("../../")
-
+import os
+sys.path.append(os.path.join("..",".."))
+print(sys.path)
 from experiment import Exp
 import yaml
 import os
 import torch
 from ptflops import get_model_complexity_info
 
+print("started running train process...")
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""

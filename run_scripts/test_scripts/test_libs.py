@@ -1,5 +1,6 @@
 import sys
-sys.path.append("../../")
+import os
+sys.path.append(os.path.join("..",".."))
 from experiment import Exp
 import yaml
 import os
