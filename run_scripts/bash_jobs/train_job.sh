@@ -16,4 +16,4 @@ done
 cd ~/projects/def-plago/akhaked/PERCOM_Variability_Model_Research/run_scripts/test_scripts
 module purge
 source ~/py310/bin/activate
-python test_run.py
+python run_training.py
