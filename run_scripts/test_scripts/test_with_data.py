@@ -7,7 +7,6 @@ from experiment import Exp
 import yaml
 import os
 import torch
-from ptflops import get_model_complexity_info
 
 '''
 This script (method) is used to train the model with a particular sensor individually.
