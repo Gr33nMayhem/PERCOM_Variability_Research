@@ -88,11 +88,6 @@ class Exp(object):
                                      num_workers=0,
                                      sampler=sampler,
                                      drop_last=False)
-        elif flag == 'test':
-            data_loader = DataLoader(data,
-                                     shuffle=shuffle_flag,
-                                     num_workers=0,
-                                     drop_last=False)
         else:
             data_loader = DataLoader(data,
                                      batch_size=self.args.batch_size,

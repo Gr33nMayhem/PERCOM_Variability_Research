@@ -66,7 +66,7 @@ class BASE_DATA():
         self.train_variant = args.train_variant
         self.test_variant = args.test_variant
 
-        self.include_test_participants = args.include_test_participants
+        self.include_test_participants = False
         self.difference = args.difference
         self.filtering = args.filtering
         self.magnitude = args.magnitude
