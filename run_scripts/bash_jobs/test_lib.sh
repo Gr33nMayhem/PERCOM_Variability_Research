@@ -2,10 +2,10 @@
 #SBATCH --account=def-plago
 #SBATCH --export=ALL,DISABLE_DCGM=1
 #SBATCH --gpus-per-node=v100:1
-#SBATCH --mem=2G
+#SBATCH --mem=8G
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --time=0:1:0
+#SBATCH --ntasks-per-node=8
+#SBATCH --time=0:10:0
 #SBATCH --mail-user=Gr33nMayhem@gmail.com
 #SBATCH --mail-type=ALL
 
