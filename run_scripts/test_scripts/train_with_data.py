@@ -108,28 +108,28 @@ def run_train_process_with_data(data_set_index):
     args.temporal_info_interaction_type = "lstm"
     args.temporal_info_aggregation_type = "tnaive"
     exp = Exp(args)
-    macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
-                                             print_per_layer_stat=True, verbose=False)
-    print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-    print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+    # macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
+    #                                          print_per_layer_stat=True, verbose=False)
+    # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+    # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
     exp.train()
 
     args.model_type = "deepconvlstm"
 
     exp = Exp(args)
-    macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
-                                             print_per_layer_stat=True, verbose=False)
-    print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-    print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+    # macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
+    #                                          print_per_layer_stat=True, verbose=False)
+    # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+    # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
 
     exp.train()
 
     args.model_type = "attend"
 
     exp = Exp(args)
-    macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
-                                             print_per_layer_stat=True, verbose=False)
-    print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-    print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+    # macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
+    #                                          print_per_layer_stat=True, verbose=False)
+    # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+    # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
 
     exp.train()
