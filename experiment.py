@@ -12,7 +12,9 @@ from sklearn.metrics import confusion_matrix
 import yaml
 # import models
 from models.model_builder import model_builder
+import warnings
 
+warnings.filterwarnings("ignore")
 from torch.utils.data.sampler import WeightedRandomSampler
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
@@ -23,6 +25,9 @@ import seaborn as sns
 
 import random
 import os
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 
 class Exp(object):
@@ -36,21 +41,21 @@ class Exp(object):
         self.criterion_dict = {"MSE": nn.MSELoss, "CrossEntropy": nn.CrossEntropyLoss}
 
         self.model = self.build_model().to(self.device)
-        print("Done!")
+        logging.info("Done!")
         self.model_size = np.sum([para.numel() for para in self.model.parameters() if para.requires_grad])
-        print("Parameter :", self.model_size)
+        logging.info("Parameter :{}".format(self.model_size))
 
-        print("Set the seed as : ", self.args.seed)
+        logging.info("Set the seed as : {}".format(self.args.seed))
 
     def acquire_device(self):
         if self.args.use_gpu:
             os.environ["CUDA_VISIBLE_DEVICES"] = str(
                 self.args.gpu) if not self.args.use_multi_gpu else self.args.devices
             device = torch.device('cuda:{}'.format(self.args.gpu))
-            print('Use GPU: cuda:{}'.format(self.args.gpu))
+            logging.info('Use GPU: cuda:{}'.format(self.args.gpu))
         else:
             device = torch.device('cpu')
-            print('Use CPU')
+            logging.info('Use CPU')
         return device
 
     def build_model(self):
@@ -211,8 +216,8 @@ class Exp(object):
         # load the data
         dataset = data_dict[self.args.data_name](self.args)
 
-        print("================ {} Mode ====================".format(dataset.exp_mode))
-        print("================ {} CV ======================".format(dataset.num_of_cv))
+        logging.info("================ {} Mode ====================".format(dataset.exp_mode))
+        logging.info("================ {} CV ======================".format(dataset.num_of_cv))
 
         num_of_cv = dataset.num_of_cv
 
@@ -230,7 +235,7 @@ class Exp(object):
             os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
             os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":16:8"
 
-            print("================ the {} th CV Experiment ================ ".format(iter))
+            logging.info("================ the {} th CV Experiment ================ ".format(iter))
 
             dataset.update_train_val_test_keys()
 
@@ -262,7 +267,7 @@ class Exp(object):
             epoch_log_file_name = os.path.join(cv_path, "epoch_log.txt")
 
             if skip_train:
-                print("================Skip the {} CV Experiment================".format(iter))
+                logging.info("================Skip the {} CV Experiment================".format(iter))
             else:
 
                 if os.path.exists(epoch_log_file_name):
@@ -271,9 +276,9 @@ class Exp(object):
                 epoch_log = open(epoch_log_file_name, "a")
                 score_log = open(score_log_file_name, "a")
 
-                print("================ Build the model ================ ")
+                logging.info("================ Build the model ================ ")
                 if self.args.mixup:
-                    print(" Using Mixup Training")
+                    logging.info(" Using Mixup Training")
                 self.model = self.build_model().to(self.device)
 
                 early_stopping = EarlyStopping(patience=self.args.early_stop_patience, verbose=True)
@@ -293,7 +298,6 @@ class Exp(object):
                     epoch_time = time.time()
 
                     for i, (batch_x1, batch_x2, batch_y) in enumerate(train_loader):
-
                         # if "cross" in self.args.model_type:
                         #    batch_x1 = batch_x1.double().to(self.device)
                         #    batch_x2 = batch_x2.double().to(self.device)
@@ -336,15 +340,17 @@ class Exp(object):
                         loss.backward()
                         model_optim.step()
 
-                    print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
+                    logging.info("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
                     epoch_log.write("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
                     epoch_log.write("\n")
 
                     train_loss = np.average(train_loss)
+                    vali_time = time.time()
                     vali_loss, vali_acc, vali_f_w, vali_f_macro, vali_f_micro = self.validation(self.model, val_loader,
                                                                                                 criterion)
+                    logging.info("Validation for Epoch: {} cost time: {}".format(epoch + 1, time.time() - vali_time))
 
-                    print(
+                    logging.info(
                         "VALI: Epoch: {0}, Steps: {1} | Train Loss: {2:.7f}  Vali Loss: {3:.7f} Vali Accuracy: {4:.7f}  Vali weighted F1: {5:.7f}  Vali macro F1 {6:.7f} ".format(
                             epoch + 1, train_steps, train_loss, vali_loss, vali_acc, vali_f_w, vali_f_macro))
 
@@ -354,7 +360,7 @@ class Exp(object):
 
                     early_stopping(vali_loss, self.model, cv_path, vali_f_macro, vali_f_w, epoch_log)
                     if early_stopping.early_stop:
-                        print("Early stopping")
+                        logging.info("Early stopping")
                         break
                     epoch_log.write(
                         "----------------------------------------------------------------------------------------\n")
@@ -364,12 +370,14 @@ class Exp(object):
                 # rename the best_vali to final_best_vali
                 os.rename(cv_path + '/' + 'best_vali.pth', cv_path + '/' + 'final_best_vali.pth')
 
-                print("Loading the best validation model!")
+                logging.info("Loading the best validation model!")
                 self.model.load_state_dict(torch.load(cv_path + '/' + 'final_best_vali.pth'))
                 # model.eval()
+                test_time = time.time()
                 test_loss, test_acc, test_f_w, test_f_macro, test_f_micro = self.validation(self.model, test_loader,
                                                                                             criterion, iter + 1)
-                print(
+                logging.info("Test for CV: {} cost time: {}".format(iter + 1, time.time() - test_time))
+                logging.info(
                     "Final Test Performance : Test Accuracy: {0:.7f}  Test weighted F1: {1:.7f}  Test macro F1 {2:.7f} ".format(
                         test_acc, test_f_w, test_f_macro))
                 epoch_log.write(
@@ -388,7 +396,7 @@ class Exp(object):
             if self.args.wavelet_filtering_finetuning:
                 finetuned_score_log_file_name = os.path.join(self.path, "finetuned_score.txt")
                 if skip_finetuning:
-                    print("================Skip the {} CV Experiment Fine Tuning================".format(iter))
+                    logging.info("================Skip the {} CV Experiment Fine Tuning================".format(iter))
                 else:
                     # thre_index : selected number
                     epoch_log = open(epoch_log_file_name, "a")
@@ -413,11 +421,13 @@ class Exp(object):
                     # build the new model
                     new_model = model_builder(self.args, input_f_channel=thre_index).to(self.device)
 
-                    print("------------Fine Tuning  : ", self.args.f_in - thre_index,
-                          "  will be pruned   -----------------------------------------")
-                    print("old model Parameter :", self.model_size)
-                    print("pruned model Parameter :", np.sum([para.numel() for para in new_model.parameters()]))
-                    print("----------------------------------------------------------------------------------------")
+                    logging.info("------------Fine Tuning  : ", self.args.f_in - thre_index,
+                                 "  will be pruned   -----------------------------------------")
+                    logging.info("old model Parameter : {}".format( self.model_size))
+                    logging.info("pruned model Parameter : {}".format(
+                        np.sum([para.numel() for para in new_model.parameters()])))
+                    logging.info(
+                        "----------------------------------------------------------------------------------------")
                     # copy the weights
                     flag_channel_selection = False
                     for n, p in new_model.named_parameters():
@@ -455,7 +465,7 @@ class Exp(object):
                             loss.backward()
                             model_optim.step()
 
-                        print("Fine Tuning Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
+                        logging.info("Fine Tuning Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
                         epoch_log.write(
                             "Fine Tuning Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
                         epoch_log.write("\n")
@@ -465,7 +475,7 @@ class Exp(object):
                                                                                                     val_loader,
                                                                                                     criterion)
 
-                        print(
+                        logging.info(
                             "Fine Tuning VALI: Epoch: {0}, Steps: {1} | Train Loss: {2:.7f}  Vali Loss: {3:.7f} Vali Accuracy: {4:.7f}  Vali weighted F1: {5:.7f}  Vali macro F1 {6:.7f} ".format(
                                 epoch + 1, train_steps, train_loss, vali_loss, vali_acc, vali_f_w, vali_f_macro))
 
@@ -475,7 +485,7 @@ class Exp(object):
 
                         early_stopping(vali_loss, new_model, cv_path, vali_f_macro, vali_f_w, epoch_log)
                         if early_stopping.early_stop:
-                            print("Early stopping")
+                            logging.info("Early stopping")
                             break
                         epoch_log.write(
                             "----------------------------------------------------------------------------------------\n")
@@ -484,12 +494,12 @@ class Exp(object):
                     # rename the best_vali to final_best_vali
                     os.rename(cv_path + '/' + 'best_vali.pth', cv_path + '/' + 'final_finetuned_best_vali.pth')
 
-                    print("Loading the best finetuned validation model!")
+                    logging.info("Loading the best finetuned validation model!")
                     new_model.load_state_dict(torch.load(cv_path + '/' + 'final_finetuned_best_vali.pth'))
 
                     test_loss, test_acc, test_f_w, test_f_macro, test_f_micro = self.validation(new_model, test_loader,
                                                                                                 criterion)
-                    print(
+                    logging.info(
                         "Fine Tuning Final Test Performance : Test Accuracy: {0:.7f}  Test weighted F1: {1:.7f}  Test macro F1 {2:.7f} ".format(
                             test_acc, test_f_w, test_f_macro))
                     epoch_log.write(
@@ -520,7 +530,7 @@ class Exp(object):
             test_loader = self._get_data(dataset, flag='test', weighted_sampler=self.args.weighted_sampler)
             preds = []
             trues = []
-            print("================ {} CV ======================".format(iter))
+            logging.info("================ {} CV ======================".format(iter))
             for i, (batch_x1, batch_x2, batch_y) in enumerate(test_loader):
                 if "cross" in self.args.model_type:
                     batch_x1 = batch_x1.double().to(self.device)
@@ -548,7 +558,7 @@ class Exp(object):
             f_w = f1_score(trues, preds, average='weighted')
             f_macro = f1_score(trues, preds, average='macro')
             f_micro = f1_score(trues, preds, average='micro')
-            print(
+            logging.info(
                 "Test Accuracy: {0:.7f}  Test weight F1: {1:.7f}  Test macro F1 {2:.7f}  Test micro F1 {3:.7f}".format(
                     acc, f_w, f_macro, f_micro))
             prediction_result_df = pd.DataFrame({'preds': preds, 'trues': trues})
@@ -605,8 +615,6 @@ class Exp(object):
         if index_of_cv:
             cf_matrix = confusion_matrix(trues, preds, labels=[i for i in range(self.args.num_classes)], )
             cf_matrix = pd.DataFrame(cf_matrix, columns=['Walking', 'Not Walking'], index=['Walking', 'Not Walking'])
-            print(index_of_cv)
-            print(len(cf_matrix))
             # with open("{}.npy".format(index_of_cv), 'wb') as f:
             #    np.save(f, cf_matrix)
             plt.figure()

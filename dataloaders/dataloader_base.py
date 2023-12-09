@@ -54,7 +54,7 @@ class BASE_DATA():
         self.freq_save_path = args.freq_save_path
         self.window_save_path = args.window_save_path
         self.data_name = args.data_name
-
+        self.device = args.device
         window_save_path = os.path.join(self.window_save_path, self.data_name)
         if not os.path.exists(window_save_path):
             os.mkdir(window_save_path)
@@ -62,9 +62,6 @@ class BASE_DATA():
         self.representation_type = args.representation_type
         # assert self.data_name in []
         self.freq = args.sampling_freq
-        self.variation_count = args.variation_count
-        self.train_variant = args.train_variant
-        self.test_variant = args.test_variant
 
         self.include_test_participants = False
         self.difference = args.difference
@@ -84,44 +81,41 @@ class BASE_DATA():
         # data_x : sub_id, sensor_1, sensor_2,..., sensor_n , sub
         # data_y : activity_id   index:sub_id
         # update col_names
-        self.col_names = list(self.data_x[self.train_variant].columns)[1:-1]
+        self.col_names = list(self.data_x.columns)[1:-1]
 
         # ======================= Differencing the Data =================================
-        for variant in range(self.variation_count):
-            if self.difference:
-                print("Channel Augmentation : Differencing")
-                self.data_x[variant] = self.differencing(self.data_x[variant].set_index('sub_id').copy())
+        if self.difference:
+            print("Channel Augmentation : Differencing")
+            self.data_x = self.differencing(self.data_x.set_index('sub_id').copy())
 
         # data_x : sub_id, sensor_1, sensor_2,..., sensor_n , sub
 
         # ======================== Filtering the Data =========================================
-        for variant in range(self.variation_count):
-            if self.filtering:
-                print("Channel Augmentation : Acc Gyro Filtering")
-                self.data_x[variant] = self.Sensor_data_noise_grav_filtering(self.data_x[variant].set_index('sub_id').copy())
+        if self.filtering:
+            print("Channel Augmentation : Acc Gyro Filtering")
+            self.data_x = self.Sensor_data_noise_grav_filtering(self.data_x.set_index('sub_id').copy())
 
         # ======================== Mag the Data =====================================
-        for variant in range(self.variation_count):
-            if self.magnitude:
-                print("Channel Augmentation : Magnitute Calculating for acc and Gyro")
-                self.data_x[variant].columns, columns_groups = self.regroup_and_reindex_all_cols(
-                    self.data_x[variant].set_index('sub_id').copy())
+        if self.magnitude:
+            print("Channel Augmentation : Magnitute Calculating for acc and Gyro")
+            self.data_x.columns, columns_groups = self.regroup_and_reindex_all_cols(
+                self.data_x.set_index('sub_id').copy())
 
-                temp_columns = list(self.data_x[variant].columns[1:-1])
-                for cols in columns_groups:
-                    if len(cols) == 3:
-                        col1, col2, col3 = cols
-                        col = "_".join(col1.split("_")[:-1]) + "_mag"
-                        temp_columns.append(col)
-                        self.data_x[variant][col] = mag_3_signals(np.array(self.data_x[variant][col1]),
-                                                         np.array(self.data_x[variant][col2]),
-                                                         np.array(self.data_x[variant][col3]))
-                self.data_x[variant] = self.data_x[variant][["sub_id"] + temp_columns + ["sub"]]
+            temp_columns = list(self.data_x.columns[1:-1])
+            for cols in columns_groups:
+                if len(cols) == 3:
+                    col1, col2, col3 = cols
+                    col = "_".join(col1.split("_")[:-1]) + "_mag"
+                    temp_columns.append(col)
+                    self.data_x[col] = mag_3_signals(np.array(self.data_x[col1]),
+                                                     np.array(self.data_x[col2]),
+                                                     np.array(self.data_x[col3]))
+            self.data_x = self.data_x[["sub_id"] + temp_columns + ["sub"]]
 
         # ======================= Generate the Sliding window for Train/Test =================================
         # train/test is different by the sliding step.
-        self.train_slidingwindows = self.get_the_sliding_index(self.data_x[self.train_variant].copy(), self.data_y[self.train_variant].copy(), "train")
-        self.test_slidingwindows = self.get_the_sliding_index(self.data_x[self.test_variant].copy(), self.data_y[self.test_variant].copy(), "test")
+        self.train_slidingwindows = self.get_the_sliding_index(self.data_x.copy(), self.data_y.copy(), "train")
+        self.test_slidingwindows = self.get_the_sliding_index(self.data_x.copy(), self.data_y.copy(), "test")
 
         self.num_of_cv = len(self.LOCV_keys)
         self.index_of_cv = 0
@@ -155,12 +149,12 @@ class BASE_DATA():
             # Normalization the data
             train_vali_x = pd.DataFrame()
             for sub in self.train_keys:
-                temp = self.data_x[self.train_variant][(self.data_x[self.train_variant][self.split_tag] == sub)]
+                temp = self.data_x[(self.data_x[self.split_tag] == sub)]
                 train_vali_x = pd.concat([train_vali_x, temp])
 
             test_x = pd.DataFrame()
             for sub in self.test_keys:
-                temp = self.data_x[self.test_variant][(self.data_x[self.test_variant][self.split_tag] == sub)]
+                temp = self.data_x[(self.data_x[self.split_tag] == sub)]
                 test_x = pd.concat([test_x, temp])
 
             train_vali_x, test_x = self.normalization(train_vali_x, test_x)
@@ -231,7 +225,7 @@ class BASE_DATA():
             start_index = self.train_slidingwindows[index][1]
             end_index = self.train_slidingwindows[index][2]
 
-            y_of_all_windows.append(class_transform[self.data_y[self.train_variant].iloc[start_index:end_index].mode().loc[0]])
+            y_of_all_windows.append(class_transform[self.data_y.iloc[start_index:end_index].mode().loc[0]])
         y_of_all_windows = np.array(y_of_all_windows)
 
         target_count = np.array([np.sum(y_of_all_windows == label) for label in set(y_of_all_windows)])

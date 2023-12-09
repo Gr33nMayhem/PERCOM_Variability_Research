@@ -16,8 +16,7 @@ The method will train the CV models using three architectures: TinyHAR, Conv-LST
 
 :param data_set_index: the index of the sensor to be trained.
 '''
-devices = ['bluesense-RWR1',
-           'bluesense-RWR2']
+
 
 
 def run_train_process_with_data(data_set_index):
@@ -30,13 +29,12 @@ def run_train_process_with_data(data_set_index):
         __delattr__ = dict.__delitem__
 
     args = dotdict()
-    args.devices_to_load = devices
     # TODO change the path as relative path
-    args.to_save_path = r"../../data/Run_logs" + "/" + str(devices[data_set_index])
+    args.to_save_path = r"../../data/Run_logs" + "/" + str(data_set_index)
     args.freq_save_path = r"../../data/Freq_data"
     args.window_save_path = r"../../data/Sliding_window"
     args.root_path = r"../.."
-
+    args.device = data_set_index
     args.drop_transition = False
     args.datanorm_type = "standardization"  # None ,"standardization", "minmax"
     args.filter_scaling_factor = 1
@@ -88,10 +86,6 @@ def run_train_process_with_data(data_set_index):
     args.input_length = args.windowsize
     # input information
     args.c_in = config["num_channels"]
-
-    args.train_variant = data_set_index
-    args.test_variant = data_set_index
-    args.variation_count = 1
 
     if args.difference:
         args.c_in = args.c_in * 2

@@ -31,7 +31,7 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
                                                                               self.selected_cols, "Sensor Type")
 
         self.drop_activities = []
-
+        self.train_keys = [1, 2, 3, 4, 5, 6, 7, 8]
         self.exp_mode = args.exp_mode
 
         self.split_tag = "sub"
@@ -58,8 +58,6 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
 
     def load_all_the_data(self, root_path):
         print(" ----------------------- load all the data -------------------")
-        cooking_data_path = '../../data/harvar/cooking'
-        walking_data_path = '../../data/harvar/walking'
 
         user_dict = {
             'p001': 1,
@@ -89,37 +87,23 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
             'maxim-red': 'maxim',
             'maxim-green': 'maxim',
         }
-        X = []
-        Y = []
-        lengths_for_activities = {}
-        for device in self.devices_to_load:
-            data_x = pd.DataFrame(columns=['sub_id', 'x', 'y', 'z'])
-            data_y = pd.DataFrame(columns=['activity_id'])
-            length_from_first_device = {}
-            for activity in activity_dict.keys():
-                for key in user_dict.keys():
-                    # check if the index of the device is the first
-                    # Does not require cropping
-                    # if self.devices_to_load.index(device) == 0:
-                    data_x, data_y = self.load_from_csv(data_x, data_y, key, user_dict[key],
-                                                        activity_dict[activity],
-                                                        activity, root_path, device_dict[device], device, 0)
-                    length_from_first_device[key] = data_x.shape[0]
-                    # do not require cropping
-                    # else:
-                    #     data_x, data_y = self.load_from_csv(data_x, data_y, key, user_dict[key],
-                    #                                         activity_dict[activity],
-                    #                                         activity, root_path, device_dict[device], device,
-                    #                                         lengths_for_activities[activity][key])
-                # save the length of the first device per activity, so that it can be used for cropping
-                lengths_for_activities[activity] = length_from_first_device
-            data_y = data_x.iloc[:, -1]
-            data_y = data_y.reset_index(drop=True)
-            data_x = data_x.iloc[:, :-1]
-            data_x = data_x.reset_index(drop=True)
 
-            X.append(data_x)
-            Y.append(data_y)
+        data_x = pd.DataFrame(columns=['sub_id', 'x', 'y', 'z'])
+        data_y = pd.DataFrame(columns=['activity_id'])
+        length_from_first_device = {}
+        for key in user_dict.keys():
+            for activity in activity_dict.keys():
+                data_x, data_y = self.load_from_csv(data_x, data_y, key, user_dict[key],
+                                                    activity_dict[activity],
+                                                    activity, root_path, device_dict[self.device], self.device)
+                length_from_first_device[key] = data_x.shape[0]
+        data_y = data_x.iloc[:, -1]
+        data_y = data_y.reset_index(drop=True)
+        data_x = data_x.iloc[:, :-1]
+        data_x = data_x.reset_index(drop=True)
+
+        X = data_x
+        Y = data_y
         return X, Y
 
     """ TODO: Change this when using all labels"""
@@ -136,7 +120,7 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
         return temp
 
     def load_from_csv(self, data_x, data_y, participant_id, participant_num, activity_id, activity_name, root_path,
-                      device_type, device_id, need_cropping=0):
+                      device_type, device_id):
         empatica_path = os.path.join(root_path, activity_name, device_type)
         temp = pd.read_csv(
             os.path.join(empatica_path, participant_id + '-' + device_id + '-' + activity_name + '.csv'))
@@ -144,9 +128,6 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
             temp = self.extract_labelled_data_only(temp, participant_id, root_path)
         temp = temp[['Acc_X', 'Acc_Y', 'Acc_Z']]
         temp.columns = ['x', 'y', 'z']
-        # Do not crop
-        # if need_cropping != 0:
-        #     temp = temp[:need_cropping]
         temp.reset_index(drop=True, inplace=True)
         subj = pd.DataFrame({'sub_id': (np.zeros(temp.shape[0]) + participant_num)})
         temp = subj.join(temp)
