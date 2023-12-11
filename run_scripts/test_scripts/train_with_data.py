@@ -38,7 +38,7 @@ def run_train_process_with_data(data_set_index):
     args.drop_transition = False
     args.datanorm_type = "standardization"  # None ,"standardization", "minmax"
     args.filter_scaling_factor = 1
-    args.batch_size = 256 * 4
+    args.batch_size = 256 * 2
     args.shuffle = True
     args.drop_last = False
     args.train_vali_quote = 0.90
