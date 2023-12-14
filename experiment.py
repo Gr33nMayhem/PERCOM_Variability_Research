@@ -563,7 +563,7 @@ class Exp(object):
                     acc, f_w, f_macro, f_micro))
             prediction_result_df = pd.DataFrame({'preds': preds, 'trues': trues})
             prediction_result_df.to_csv(os.path.join(path, 'cv_' + str(iter) + '/prediction_result_' +
-                                                     self.args.devices_to_load[self.args.test_variant] + '.csv'))
+                                                     self.args.device + '.csv'))
 
         return preds, trues
 
