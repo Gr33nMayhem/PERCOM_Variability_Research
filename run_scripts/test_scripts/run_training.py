@@ -3,6 +3,8 @@ import os
 import argparse
 from run_scripts.test_scripts.train_with_data import run_train_process_with_data
 
+sys.path.append(os.path.join("..", ".."))
+
 parser = argparse.ArgumentParser(
     description='Enter a sensor name as --device <device name> \n ' +
                 'empatica-left: empatica\n' +
@@ -18,7 +20,5 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--device', type=str, help='Device Name for training')
 
 args = parser.parse_args()
-
-sys.path.append(os.path.join("..", ".."))
 
 run_train_process_with_data(args.arg1)
