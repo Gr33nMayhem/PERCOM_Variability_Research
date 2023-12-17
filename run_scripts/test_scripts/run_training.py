@@ -1,9 +1,9 @@
 import sys
 import os
 import argparse
-from run_scripts.test_scripts.train_with_data import run_train_process_with_data
 
 sys.path.append(os.path.join("..", ".."))
+from run_scripts.test_scripts.train_with_data import run_train_process_with_data
 
 parser = argparse.ArgumentParser(
     description='Enter a sensor name as --device <device name> \n ' +
