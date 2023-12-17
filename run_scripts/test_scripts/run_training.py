@@ -21,4 +21,4 @@ parser.add_argument('--device', type=str, help='Device Name for training')
 
 args = parser.parse_args()
 
-run_train_process_with_data(args.arg1)
+run_train_process_with_data(args.device)
