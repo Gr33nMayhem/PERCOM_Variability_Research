@@ -97,7 +97,7 @@ class Exp(object):
             data_loader = DataLoader(data,
                                      batch_size=self.args.batch_size,
                                      shuffle=shuffle_flag,
-                                     num_workers=4,
+                                     num_workers=0,
                                      drop_last=False)
         return data_loader
 
@@ -521,38 +521,47 @@ class Exp(object):
         num_of_cv = dataset.num_of_cv
 
         for iter in range(num_of_cv):
-            model = self.build_model().to(self.device)
+            self.model = self.build_model().to(self.device)
             setting = self.get_setting_name()
             path = os.path.join(self.args.to_save_path, 'logs/' + setting)
-            model.load_state_dict(torch.load(os.path.join(path, 'cv_' + str(iter) + '/final_best_vali.pth')))
-            model.eval()
+            self.model.load_state_dict(torch.load(os.path.join(path, 'cv_' + str(iter) + '/final_best_vali.pth')))
             dataset.update_train_val_test_keys()
             test_loader = self._get_data(dataset, flag='test', weighted_sampler=self.args.weighted_sampler)
+            criterion = nn.CrossEntropyLoss(reduction="mean").to(self.device)
+            self.model.eval()
+            total_loss = []
             preds = []
             trues = []
             logging.info("================ {} CV ======================".format(iter))
-            for i, (batch_x1, batch_x2, batch_y) in enumerate(test_loader):
-                if "cross" in self.args.model_type:
-                    batch_x1 = batch_x1.double().to(self.device)
-                    batch_x2 = batch_x2.double().to(self.device)
-                    batch_y = batch_y.long().to(self.device)
-                    # model prediction
-                    if self.args.output_attention:
-                        outputs = self.model(batch_x1, batch_x2)[0]
+            with torch.no_grad():
+                for i, (batch_x1, batch_x2, batch_y) in enumerate(test_loader):
+                    if "cross" in self.args.model_type:
+                        batch_x1 = batch_x1.double().to(self.device)
+                        batch_x2 = batch_x2.double().to(self.device)
+                        batch_y = batch_y.long().to(self.device)
+                        # model prediction
+                        if self.args.output_attention:
+                            outputs = self.model(batch_x1, batch_x2)[0]
+                        else:
+                            outputs = self.model(batch_x1, batch_x2)
                     else:
-                        outputs = self.model(batch_x1, batch_x2)
-                else:
-                    batch_x1 = batch_x1.double().to(self.device)
-                    batch_y = batch_y.long().to(self.device)
+                        batch_x1 = batch_x1.double().to(self.device)
+                        batch_y = batch_y.long().to(self.device)
 
-                    # model prediction
-                    if self.args.output_attention:
-                        outputs = self.model(batch_x1)[0]
-                    else:
-                        outputs = self.model(batch_x1)
+                        # model prediction
+                        if self.args.output_attention:
+                            outputs = self.model(batch_x1)[0]
+                        else:
+                            outputs = self.model(batch_x1)
 
-                preds.extend(list(np.argmax(outputs.detach().cpu().numpy(), axis=1)))
-                trues.extend(list(batch_y.detach().cpu().numpy()))
+                    pred = outputs.detach()  # .cpu()
+                    true = batch_y.detach()  # .cpu()
+
+                    loss = criterion(pred, true)
+                    total_loss.append(loss.cpu())
+
+                    preds.extend(list(np.argmax(outputs.detach().cpu().numpy(), axis=1)))
+                    trues.extend(list(batch_y.detach().cpu().numpy()))
 
             acc = accuracy_score(preds, trues)
             f_w = f1_score(trues, preds, average='weighted')
