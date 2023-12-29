@@ -1,7 +1,20 @@
-harvar:
+harvar_empat:
   filename: "data/harvar"
   sampling_freq: 64
   num_classes: 2
   num_channels: 3
   window_seconds: 2
 
+harvar_bluesense:
+  filename: "data/harvar"
+  sampling_freq: 100
+  num_classes: 2
+  num_channels: 3
+  window_seconds: 2
+
+harvar_maxim:
+  filename: "data/harvar"
+  sampling_freq: 25
+  num_classes: 2
+  num_channels: 3
+  window_seconds: 2

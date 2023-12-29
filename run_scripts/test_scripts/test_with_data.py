@@ -54,7 +54,16 @@ def run_test_process_with_data(data_set_index):
     args.optimizer = "Adam"
     args.criterion = "CrossEntropy"
     args.seed = 1
-    args.data_name = 'harvar'
+
+    if data_set_index.find("maxim") != -1:
+        args.data_name = 'harvar_maxim'
+    elif data_set_index.find("empatica") != -1:
+        args.data_name = 'harvar_empat'
+    elif data_set_index.find("bluesense") != -1:
+        args.data_name = 'harvar_bluesense'
+    else:
+        args.data_name = 'harvar'
+
     args.wavelet_filtering = False
     args.wavelet_filtering_regularization = False
     args.wavelet_filtering_finetuning = False
@@ -84,7 +93,6 @@ def run_test_process_with_data(data_set_index):
     args.input_length = args.windowsize
     # input information
     args.c_in = config["num_channels"]
-
 
     if args.difference:
         args.c_in = args.c_in * 2

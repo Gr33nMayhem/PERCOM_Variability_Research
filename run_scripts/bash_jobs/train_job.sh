@@ -17,6 +17,4 @@ cd ~/projects/def-plago/akhaked/PERCOM_Variability_Model_Research/run_scripts/te
 module purge
 module load python/3.11 scipy-stack
 source ~/py311/bin/activate
-
-python run_training.py --device bluesense-RWR1
-python run_training.py --device bluesense-RWR2
+python run_training.py --device "$1"

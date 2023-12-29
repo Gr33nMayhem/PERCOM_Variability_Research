@@ -9,6 +9,8 @@ import os
 import torch
 from ptflops import get_model_complexity_info
 
+import logging
+
 '''
 This script (method) is used to train the model with a particular sensor individually.
 
@@ -18,10 +20,10 @@ The method will train the CV models using three architectures: TinyHAR, Conv-LST
 '''
 
 
-
 def run_train_process_with_data(data_set_index):
-    print("started running train process...")
-
+    # set up the logging
+    logging.basicConfig(level=logging.INFO)
+    logging.info('Start training process with data' + str(data_set_index))
     class dotdict(dict):
         """dot.notation access to dictionary attributes"""
         __getattr__ = dict.get
@@ -32,7 +34,7 @@ def run_train_process_with_data(data_set_index):
     # TODO change the path as relative path
     args.to_save_path = r"../../data/Run_logs" + "/" + str(data_set_index)
     args.freq_save_path = r"../../data/Freq_data"
-    args.window_save_path = r"../../data/Sliding_window"
+    args.window_save_path = r"../../data/Sliding_window" + "/" + str(data_set_index)
     args.root_path = r"../.."
     args.device = data_set_index
     args.drop_transition = False
@@ -56,7 +58,16 @@ def run_train_process_with_data(data_set_index):
     args.optimizer = "Adam"
     args.criterion = "CrossEntropy"
     args.seed = 1
-    args.data_name = 'harvar'
+
+    if data_set_index.find("maxim") != -1:
+        args.data_name = 'harvar_maxim'
+    elif data_set_index.find("empatica") != -1:
+        args.data_name = 'harvar_empat'
+    elif data_set_index.find("bluesense") != -1:
+        args.data_name = 'harvar_bluesense'
+    else:
+        args.data_name = 'harvar'
+
     args.wavelet_filtering = False
     args.wavelet_filtering_regularization = False
     args.wavelet_filtering_finetuning = False
