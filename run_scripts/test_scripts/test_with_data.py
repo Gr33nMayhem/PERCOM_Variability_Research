@@ -9,15 +9,15 @@ import os
 import torch
 
 '''
-This script (method) is used to train the model with a particular sensor individually.
+This script (method) is used to test the model with a particular sensor individually.
 
-The method will train the CV models using three architectures: TinyHAR, Conv-LSTM, and Attend&Discriminate.
+The method will test the models using three architectures: TinyHAR, Conv-LSTM, and Attend&Discriminate.
 
 :param data_set_index: the index of the sensor to be trained.
 '''
 
 
-def run_test_process_with_data(data_set_index):
+def run_test_process_with_data(model_device, test_device):
     print("started running train process...")
 
     class dotdict(dict):
@@ -28,11 +28,11 @@ def run_test_process_with_data(data_set_index):
 
     args = dotdict()
     # TODO change the path as relative path
-    args.to_save_path = r"../../data/Run_logs" + "/" + str(data_set_index)
+    args.to_save_path = r"../../data/Run_logs" + "/" + str(model_device)
     args.freq_save_path = r"../../data/Freq_data"
-    args.window_save_path = r"../../data/Sliding_window"
-    args.root_path = r"../.."
-    args.device = data_set_index
+    args.window_save_path = r"../../data/Sliding_window" + "/" + str(test_device)
+    args.main_root_path = r"../.."
+    args.device = model_device
     args.drop_transition = False
     args.datanorm_type = "standardization"  # None ,"standardization", "minmax"
     args.filter_scaling_factor = 1
@@ -55,14 +55,21 @@ def run_test_process_with_data(data_set_index):
     args.criterion = "CrossEntropy"
     args.seed = 1
 
-    if data_set_index.find("maxim") != -1:
+    if model_device.find("maxim") != -1:
         args.data_name = 'harvar_maxim'
-    elif data_set_index.find("empatica") != -1:
+    elif model_device.find("empatica") != -1:
         args.data_name = 'harvar_empat'
-    elif data_set_index.find("bluesense") != -1:
+    elif model_device.find("bluesense") != -1:
         args.data_name = 'harvar_bluesense'
-    else:
-        args.data_name = 'harvar'
+
+    args.test_device = test_device
+
+    if test_device.find("maxim") != -1:
+        args.test_data_name = 'harvar_maxim'
+    elif test_device.find("empatica") != -1:
+        args.test_data_name = 'harvar_empat'
+    elif test_device.find("bluesense") != -1:
+        args.test_data_name = 'harvar_bluesense'
 
     args.wavelet_filtering = False
     args.wavelet_filtering_regularization = False
@@ -80,12 +87,15 @@ def run_test_process_with_data(data_set_index):
     args.sensor_select = None
     args.representation_type = "time"
     args.exp_mode = "LOCV"
+    args.exp_objective = "test"
 
     config_file = open('../../configs/data.yaml', mode='r')
     data_config = yaml.load(config_file, Loader=yaml.FullLoader)
+
+    # Model related info
     config = data_config[args.data_name]
 
-    args.root_path = os.path.join(args.root_path, config["filename"])
+    args.root_path = os.path.join(args.main_root_path, config["filename"])
     args.sampling_freq = config["sampling_freq"]
     args.num_classes = config["num_classes"]
     window_seconds = config["window_seconds"]
@@ -93,6 +103,17 @@ def run_test_process_with_data(data_set_index):
     args.input_length = args.windowsize
     # input information
     args.c_in = config["num_channels"]
+
+    # Train related info
+    config = data_config[args.test_data_name]
+    args.test_root_path = os.path.join(args.main_root_path, config["filename"])
+    args.test_sampling_freq = config["sampling_freq"]
+    args.test_num_classes = config["num_classes"]
+    window_seconds = config["window_seconds"]
+    args.test_windowsize = int(window_seconds * args.test_sampling_freq)
+    args.test_input_length = args.test_windowsize
+    # input information
+    args.test_c_in = config["num_channels"]
 
     if args.difference:
         args.c_in = args.c_in * 2
@@ -108,6 +129,7 @@ def run_test_process_with_data(data_set_index):
     else:
         args.f_in = 1
 
+    '''--------------------TINY HAR--------------------'''
     args.model_type = "tinyhar"
 
     args.cross_channel_interaction_type = "attn"
@@ -117,11 +139,13 @@ def run_test_process_with_data(data_set_index):
     exp = Exp(args)
     exp.prediction_test()
 
+    '''--------------------DEEP CONV-LSTM--------------------'''
     args.model_type = "deepconvlstm"
 
     exp = Exp(args)
     exp.prediction_test()
 
+    '''--------------------ATTEND AND DISCRIMINATE--------------------'''
     args.model_type = "attend"
 
     exp = Exp(args)

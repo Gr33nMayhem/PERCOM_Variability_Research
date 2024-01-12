@@ -423,7 +423,7 @@ class Exp(object):
 
                     logging.info("------------Fine Tuning  : ", self.args.f_in - thre_index,
                                  "  will be pruned   -----------------------------------------")
-                    logging.info("old model Parameter : {}".format( self.model_size))
+                    logging.info("old model Parameter : {}".format(self.model_size))
                     logging.info("pruned model Parameter : {}".format(
                         np.sum([para.numel() for para in new_model.parameters()])))
                     logging.info(
@@ -517,7 +517,7 @@ class Exp(object):
     def prediction_test(self):
         # assert self.args.exp_mode == "Given"
         # load the data
-        dataset = data_dict[self.args.data_name](self.args)
+        dataset = data_dict[self.args.test_data_name](self.args)
         num_of_cv = dataset.num_of_cv
 
         for iter in range(num_of_cv):
@@ -535,6 +535,20 @@ class Exp(object):
             logging.info("================ {} CV ======================".format(iter))
             with torch.no_grad():
                 for i, (batch_x1, batch_x2, batch_y) in enumerate(test_loader):
+                    ''' If the test data and the model do not have the same frequency, we will have to resample using interpolation'''
+                    if self.args.test_windowsize != self.args.windowsize:
+                        target_size = self.args.windowsize
+
+                        input_tensor_reshaped = batch_x1.view(self.args.batch_size, self.args.test_windowsize,
+                                                              self.args.c_in)
+                        input_tensor_reshaped = torch.tensor(input_tensor_reshaped, dtype=torch.float32)
+
+                        interpolated_tensor = F.interpolate(input_tensor_reshaped.permute(0, 2, 1), size=target_size,
+                                                            mode='linear', align_corners=False).permute(0, 2, 1)
+
+                        batch_x1 = interpolated_tensor.view(self.args.batch_size, 1, self.args.windowsize,
+                                                            self.args.c_in)
+
                     if "cross" in self.args.model_type:
                         batch_x1 = batch_x1.double().to(self.device)
                         batch_x2 = batch_x2.double().to(self.device)
@@ -572,7 +586,7 @@ class Exp(object):
                     acc, f_w, f_macro, f_micro))
             prediction_result_df = pd.DataFrame({'preds': preds, 'trues': trues})
             prediction_result_df.to_csv(os.path.join(path, 'cv_' + str(iter) + '/prediction_result_' +
-                                                     self.args.device + '.csv'))
+                                                     self.args.device + '_' + self.args.test_device + '.csv'))
 
         return preds, trues
 

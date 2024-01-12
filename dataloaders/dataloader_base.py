@@ -50,18 +50,29 @@ class BASE_DATA():
                                        ---> []
 
         """
-        self.root_path = args.root_path
-        self.freq_save_path = args.freq_save_path
+
+        if args.exp_objective == "test":
+            self.root_path = args.test_root_path
+            self.freq_save_path = args.test_freq_save_path
+            self.data_name = args.test_data_name
+            self.device = args.test_device
+            self.windowsize = args.test_windowsize
+            self.freq = args.test_sampling_freq
+        else:
+            self.root_path = args.root_path
+            self.freq_save_path = args.freq_save_path
+            self.data_name = args.data_name
+            self.device = args.device
+            self.windowsize = args.windowsize
+            self.freq = args.sampling_freq
+
         self.window_save_path = args.window_save_path
-        self.data_name = args.data_name
-        self.device = args.device
         window_save_path = os.path.join(self.window_save_path, self.data_name)
         if not os.path.exists(window_save_path):
             os.makedirs(window_save_path)
         self.window_save_path = window_save_path
         self.representation_type = args.representation_type
         # assert self.data_name in []
-        self.freq = args.sampling_freq
 
         self.include_test_participants = False
         self.difference = args.difference
@@ -70,7 +81,7 @@ class BASE_DATA():
         self.datanorm_type = args.datanorm_type
         self.load_all = args.load_all
         self.train_vali_quote = args.train_vali_quote
-        self.windowsize = args.windowsize
+
         self.drop_transition = args.drop_transition
         self.wavelet_function = args.wavelet_function
         # self.wavelet_filtering      = args.wavelet_filtering
