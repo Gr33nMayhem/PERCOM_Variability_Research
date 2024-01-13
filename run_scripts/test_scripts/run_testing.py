@@ -12,3 +12,6 @@ for i in range(len(devices)):
     for j in range(i + 1, len(devices)):
         run_test_process_with_data(devices[i], devices[j])
         run_test_process_with_data(devices[j], devices[i])
+
+for i in range(len(devices)):
+    run_test_process_with_data(devices[i], devices[i])

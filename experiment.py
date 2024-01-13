@@ -539,14 +539,14 @@ class Exp(object):
                     if self.args.test_windowsize != self.args.windowsize:
                         target_size = self.args.windowsize
 
-                        input_tensor_reshaped = batch_x1.view(self.args.batch_size, self.args.test_windowsize,
+                        input_tensor_reshaped = batch_x1.view(batch_x1.shape[0], self.args.test_windowsize,
                                                               self.args.c_in)
                         input_tensor_reshaped = torch.tensor(input_tensor_reshaped, dtype=torch.float32)
 
                         interpolated_tensor = F.interpolate(input_tensor_reshaped.permute(0, 2, 1), size=target_size,
                                                             mode='linear', align_corners=False).permute(0, 2, 1)
 
-                        batch_x1 = interpolated_tensor.view(self.args.batch_size, 1, self.args.windowsize,
+                        batch_x1 = interpolated_tensor.view(batch_x1.shape[0], 1, self.args.windowsize,
                                                             self.args.c_in)
 
                     if "cross" in self.args.model_type:

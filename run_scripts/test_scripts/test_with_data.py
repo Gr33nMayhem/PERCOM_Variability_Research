@@ -18,7 +18,7 @@ The method will test the models using three architectures: TinyHAR, Conv-LSTM, a
 
 
 def run_test_process_with_data(model_device, test_device):
-    print("started running train process...")
+    print("started running test process...")
 
     class dotdict(dict):
         """dot.notation access to dictionary attributes"""
