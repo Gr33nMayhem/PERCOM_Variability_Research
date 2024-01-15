@@ -515,6 +515,7 @@ class Exp(object):
                     finetuned_score_log.close()
 
     def prediction_test(self):
+
         # assert self.args.exp_mode == "Given"
         # load the data
         dataset = data_dict[self.args.test_data_name](self.args)
@@ -533,6 +534,11 @@ class Exp(object):
             preds = []
             trues = []
             logging.info("================ {} CV ======================".format(iter))
+            # Check if csv file already esists, if it does then skip prediction
+            if os.path.exists(os.path.join(path, 'cv_' + str(iter) + '/prediction_result_' +
+                                                 self.args.device + '_' + self.args.test_device + '.csv')):
+                print("Prediction already done for this setting, skipping...")
+                continue
             with torch.no_grad():
                 for i, (batch_x1, batch_x2, batch_y) in enumerate(test_loader):
                     ''' If the test data and the model do not have the same frequency, we will have to resample using interpolation'''
