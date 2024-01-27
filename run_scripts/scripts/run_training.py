@@ -3,7 +3,7 @@ import os
 import argparse
 
 sys.path.append(os.path.join("..", ".."))
-from run_scripts.test_scripts.train_with_data import run_train_process_with_data
+from run_scripts.scripts.train_with_data import run_train_process_with_data
 
 parser = argparse.ArgumentParser(
     description='Enter a sensor name as --device <device name> \n ' +
