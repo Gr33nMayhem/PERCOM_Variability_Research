@@ -212,8 +212,8 @@ def run(device1, device2):
         mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 5000, 100, 'multiscale')
         mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 5000, 100, 'multiscale')
         # store the results in the dataframe
-        mean_mmd = mean_mmd.append({'CV': i, 'Acc_X': mean_mmd_x, 'Acc_Y': mean_mmd_y, 'Acc_Z': mean_mmd_z},
-                                   ignore_index=True)
+        mean_mmd = pd.concat([mean_mmd, pd.DataFrame({'CV': i, 'Acc_X': mean_mmd_x, 'Acc_Y': mean_mmd_y,
+                                                      'Acc_Z': mean_mmd_z}, index=[0])], ignore_index=True)
     # save the results in a csv file
     if not os.path.exists(os.path.join('..', '..', 'data', 'mmd')):
         os.makedirs(os.path.join('..', '..', 'data', 'mmd'))
@@ -223,3 +223,4 @@ def run(device1, device2):
 
 args = parser.parse_args()
 run(args.device_train, args.device_test)
+run(args.device_test, args.device_train)
