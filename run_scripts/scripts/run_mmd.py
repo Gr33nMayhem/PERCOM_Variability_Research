@@ -191,29 +191,33 @@ def normalization(train_vali, test=None):
 
 
 def run(device1, device2):
+    if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
+        print('mmd results already exist')
+        return
     # sample compare between bluesense-RWR1 and bluesense-RWR2
     # iterating through 8 cv
-    full_blue1_x, full_blue1_y = load_all_the_data(device1)
-    normalization(full_blue1_x)
-    full_blue2_x, full_blue2_y = load_all_the_data(device2)
-    normalization(full_blue2_x)
+    full_1_x, full_1_y = load_all_the_data(device1)
+    normalization(full_1_x)
+    full_2_x, full_2_y = load_all_the_data(device2)
+    normalization(full_2_x)
     # create a dataframe to store the mean mmd results on 3 axis
-    mean_mmd = pd.DataFrame(columns=['CV', 'Acc_X', 'Acc_Y', 'Acc_Z'])
+    mean_mmd = pd.DataFrame(columns=['CV', 'Acc_X', 'Acc_Y', 'Acc_Z', 'std_div_x', 'std_div_y', 'std_div_z'])
     for i in range(1, 9):
         print('Starting cv', i)
-        # get data from bluesense-RWR1 for subject i and from bluesense-RWR2 for all except subject i
-        train = full_blue1_x[full_blue1_x['sub_id'] != i]
-        test = full_blue2_x[full_blue2_x['sub_id'] == i]
+        train = full_1_x[full_1_x['sub_id'] != i]
+        test = full_2_x[full_2_x['sub_id'] == i]
         # get only the 'Acc_X', 'Acc_Y', 'Acc_Z' columns as numpy matrix
         train = train.iloc[:, 1:-1].to_numpy()
         test = test.iloc[:, 1:-1].to_numpy()
         # get mmd distance for Acc_X, Acc_Y, Acc_Z
-        mean_mmd_x, std_div_x = MMD_with_sample(train[:, 0], test[:, 0], 5000, 100, 'multiscale')
-        mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 5000, 100, 'multiscale')
-        mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 5000, 100, 'multiscale')
+        mean_mmd_x, std_div_x = MMD_with_sample(train[:, 0], test[:, 0], 10000, 500, 'multiscale')
+        mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 10000, 500, 'multiscale')
+        mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 10000, 500, 'multiscale')
         # store the results in the dataframe
         mean_mmd = pd.concat([mean_mmd, pd.DataFrame({'CV': i, 'Acc_X': mean_mmd_x, 'Acc_Y': mean_mmd_y,
-                                                      'Acc_Z': mean_mmd_z}, index=[0])], ignore_index=True)
+                                                      'Acc_Z': mean_mmd_z, 'std_div_x': std_div_x,
+                                                      'std_div_y': std_div_y, 'std_div_z': std_div_z, }, index=[0])],
+                             ignore_index=True)
     # save the results in a csv file
     if not os.path.exists(os.path.join('..', '..', 'data', 'mmd')):
         os.makedirs(os.path.join('..', '..', 'data', 'mmd'))
@@ -224,3 +228,5 @@ def run(device1, device2):
 args = parser.parse_args()
 run(args.device_train, args.device_test)
 run(args.device_test, args.device_train)
+run(args.device_train, args.device_train)
+run(args.device_test, args.device_test)
