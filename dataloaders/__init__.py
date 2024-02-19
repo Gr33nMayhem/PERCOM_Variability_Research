@@ -5,6 +5,8 @@ import os
 import pickle
 from tqdm import tqdm
 
+from .dataloader_REALDISP_har import REALDISP_HAR_DATA_loader
+
 # from dataloaders.utils import PrepareWavelets,FiltersExtention
 # ----------------- har -----------------
 """
@@ -58,7 +60,7 @@ data_dict = {"ucihar" : UCI_HAR_DATA,
 from .dataloader_HARVAR_har import HARVAR_HAR_DATA_loader
 
 data_dict = {"harvar_empat": HARVAR_HAR_DATA_loader, "harvar_maxim": HARVAR_HAR_DATA_loader,
-             "harvar_bluesense": HARVAR_HAR_DATA_loader}
+             "harvar_bluesense": HARVAR_HAR_DATA_loader, "realdisp": REALDISP_HAR_DATA_loader, }
 
 
 class data_set(Dataset):

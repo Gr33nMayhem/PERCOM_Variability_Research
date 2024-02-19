@@ -62,6 +62,7 @@ class BASE_DATA():
             self.root_path = args.root_path
             self.freq_save_path = args.freq_save_path
             self.data_name = args.data_name
+            self.variant = args.variant
             self.device = args.device
             self.windowsize = args.windowsize
             self.freq = args.sampling_freq

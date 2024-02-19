@@ -18,3 +18,10 @@ harvar_maxim:
   num_classes: 2
   num_channels: 3
   window_seconds: 2
+
+realdisp:
+  filename: "data/realdisp"
+  sampling_freq: 50
+  num_classes: 34
+  num_channels: 13
+  window_seconds: 2
