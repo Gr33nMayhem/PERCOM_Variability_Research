@@ -17,4 +17,4 @@ cd ~/projects/def-plago/akhaked/PERCOM_Variability_Model_Research/run_scripts/sc
 module purge
 module load python/3.11 scipy-stack
 source ~/py311/bin/activate
-python run_training_realdisp.py --device "$1" --varaint "$2"
+python run_training_realdisp.py --device "$1" --variant "$2"
