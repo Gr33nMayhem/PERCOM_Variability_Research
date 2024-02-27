@@ -643,7 +643,8 @@ class Exp(object):
         f_micro = f1_score(trues, preds, average='micro')
         if index_of_cv:
             cf_matrix = confusion_matrix(trues, preds, labels=[i for i in range(self.args.num_classes)], )
-            cf_matrix = pd.DataFrame(cf_matrix, columns=['Walking', 'Not Walking'], index=['Walking', 'Not Walking'])
+            cf_matrix = pd.DataFrame(cf_matrix, columns=[i for i in range(self.args.num_classes)],
+                                     index=[i for i in range(self.args.num_classes)])
             # with open("{}.npy".format(index_of_cv), 'wb') as f:
             #    np.save(f, cf_matrix)
             plt.figure()
