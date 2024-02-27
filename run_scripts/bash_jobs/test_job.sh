@@ -17,4 +17,4 @@ cd ~/projects/def-plago/akhaked/PERCOM_Variability_Model_Research/run_scripts/sc
 module purge
 module load python/3.11 scipy-stack
 source ~/py311/bin/activate
-python run_testing.py
+python run_testing.py --device1 "$1" --device2 "$2"
