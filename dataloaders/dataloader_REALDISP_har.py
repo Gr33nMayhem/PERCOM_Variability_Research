@@ -88,9 +88,9 @@ class REALDISP_HAR_DATA_loader(BASE_DATA):
             data = pd.read_csv(file_name, names=self.col_names, sep='\t')
             # add the subject column
             data["sub_id"] = participant
-            # filter out columns from col_names where the column name starts with device + _
+            # filter out columns from col_names where the column name starts with device + _ and only to use ACC data
             columns_to_keep = [col for col in self.col_names if
-                               col.startswith(device_to_use + "_") or col in ["sub_id", "activity_id"]]
+                               col.startswith(device_to_use + "_" + "ACC") or col in ["sub_id", "activity_id"]]
             data = data[columns_to_keep].copy()
             # remove all rows with activity 0
             data = data[data["activity_id"] != 0]
