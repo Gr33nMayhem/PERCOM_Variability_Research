@@ -23,5 +23,5 @@ realdisp:
   filename: "data/realdisp"
   sampling_freq: 50
   num_classes: 34
-  num_channels: 13
+  num_channels: 3
   window_seconds: 2
