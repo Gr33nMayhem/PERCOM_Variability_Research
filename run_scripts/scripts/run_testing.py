@@ -13,6 +13,11 @@ device1 = parser.parse_args().device1
 device2 = parser.parse_args().device2
 
 if device1 is not None and device2 is not None:
+    run_test_process_with_data(device1, device2)
+    run_test_process_with_data(device2, device1)
+
+
+else:
     devices = ['empatica-left', 'empatica-right', 'bluesense-LUA', 'bluesense-LWR', 'bluesense-RUA', 'bluesense-RWR1',
                'bluesense-RWR2', 'bluesense-TRS', 'maxim-red', 'maxim-green']
 
@@ -23,7 +28,3 @@ if device1 is not None and device2 is not None:
 
     for i in range(len(devices)):
         run_test_process_with_data(devices[i], devices[i])
-
-else:
-    run_test_process_with_data(device1, device2)
-    run_test_process_with_data(device2, device1)
