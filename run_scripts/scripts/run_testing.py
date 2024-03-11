@@ -13,6 +13,8 @@ device1 = parser.parse_args().device1
 device2 = parser.parse_args().device2
 
 if device1 is not None and device2 is not None:
+    run_test_process_with_data(device1, device1)
+    run_test_process_with_data(device2, device2)
     run_test_process_with_data(device1, device2)
     run_test_process_with_data(device2, device1)
 
