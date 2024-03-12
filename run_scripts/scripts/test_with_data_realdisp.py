@@ -58,6 +58,7 @@ def run_test_process_with_data_realdisp(data_set_index, model_variant, test_vari
 
     args.data_name = 'realdisp'
     args.variant = test_variant
+    args.test_data_name = 'realdisp'
 
     args.wavelet_filtering = False
     args.wavelet_filtering_regularization = False
