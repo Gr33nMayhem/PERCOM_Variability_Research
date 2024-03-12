@@ -31,7 +31,7 @@ def run_test_process_with_data_realdisp(data_set_index, model_variant, test_vari
     args.to_save_path = r"../../data/Run_logs" + "/" + str(data_set_index) + "/" + str(model_variant)
     args.freq_save_path = r"../../data/Freq_data"
     args.window_save_path = r"../../data/Sliding_window" + "/" + str(data_set_index) + "/" + str(test_variant)
-    args.root_path = r"../.."
+    args.main_root_path = r"../.."
     args.test_device = data_set_index
 
     args.drop_transition = False
