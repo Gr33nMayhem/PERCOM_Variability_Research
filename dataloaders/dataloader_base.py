@@ -55,7 +55,6 @@ class BASE_DATA():
             self.root_path = args.test_root_path
             self.freq_save_path = args.test_freq_save_path
             self.data_name = args.test_data_name
-            self.variant = args.variant
             self.device = args.test_device
             self.windowsize = args.test_windowsize
             self.freq = args.test_sampling_freq
@@ -63,7 +62,6 @@ class BASE_DATA():
             self.root_path = args.root_path
             self.freq_save_path = args.freq_save_path
             self.data_name = args.data_name
-            self.variant = args.variant
             self.device = args.device
             self.windowsize = args.windowsize
             self.freq = args.sampling_freq

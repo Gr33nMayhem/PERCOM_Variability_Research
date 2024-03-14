@@ -78,8 +78,9 @@ class REALDISP_HAR_DATA_loader(BASE_DATA):
 
     def load_all_the_data(self, root_path):
         print(" ----------------------- load all the data -------------------")
-        variant_to_use = self.variant
-        device_to_use = self.device
+        # split device string to get the variant and device
+        variant_to_use = self.device.split("-")[1]
+        device_to_use = self.device.split("-")[0]
         all_data_df = pd.DataFrame()
         for participant in self.all_keys:
             # from data/realdisp load the .log file of type subject + participant + _ + variant.log
