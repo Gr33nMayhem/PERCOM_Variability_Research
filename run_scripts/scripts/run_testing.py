@@ -21,7 +21,7 @@ if device1 is not None and device2 is not None:
 
 else:
     devices = ['empatica-left', 'empatica-right', 'bluesense-LUA', 'bluesense-LWR', 'bluesense-RUA', 'bluesense-RWR1',
-               'bluesense-RWR2', 'bluesense-TRS', 'maxim-red', 'maxim-green']
+               'bluesense-RWR2', 'bluesense-TRS', 'maxim-red', 'maxim-green', 'RLA-ideal', 'RLA-self']
 
     for i in range(len(devices)):
         for j in range(i + 1, len(devices)):

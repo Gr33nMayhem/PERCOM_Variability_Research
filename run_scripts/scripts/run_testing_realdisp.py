@@ -11,8 +11,8 @@ from run_scripts.scripts.test_with_data_realdisp import run_test_process_with_da
 # parser.add_argument('--device2', type=str, help='Device 2 Name for training')
 
 device = "RLA"
-variant1 = "ideal"
-variant2 = "self"
+variant1 = "RLA-ideal"
+variant2 = "RLA-self"
 
 run_test_process_with_data_realdisp(device, variant1, variant1)
 run_test_process_with_data_realdisp(device, variant2, variant2)

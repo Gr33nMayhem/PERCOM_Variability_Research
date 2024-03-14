@@ -61,6 +61,8 @@ def run_test_process_with_data(model_device, test_device):
         args.data_name = 'harvar_empat'
     elif model_device.find("bluesense") != -1:
         args.data_name = 'harvar_bluesense'
+    else:
+        args.data_name = 'realdisp'
 
     args.test_device = test_device
 
@@ -70,6 +72,8 @@ def run_test_process_with_data(model_device, test_device):
         args.test_data_name = 'harvar_empat'
     elif test_device.find("bluesense") != -1:
         args.test_data_name = 'harvar_bluesense'
+    else:
+        args.test_data_name = 'realdisp'
 
     args.wavelet_filtering = False
     args.wavelet_filtering_regularization = False
