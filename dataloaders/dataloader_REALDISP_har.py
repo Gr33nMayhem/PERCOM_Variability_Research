@@ -97,6 +97,8 @@ class REALDISP_HAR_DATA_loader(BASE_DATA):
             data = data[data["activity_id"] != 0]
             # create a new column as a copy of sub_id as sub
             data["sub"] = data["sub_id"].copy()
+            # make sub_id the first column in data
+            data = data[["sub_id"] + [col for col in data.columns if col != "sub_id"]]
             # append the data to all_data_df
             all_data_df = pd.concat([all_data_df, data])
 
