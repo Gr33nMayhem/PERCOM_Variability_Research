@@ -5,10 +5,9 @@ import pandas as pd
 import numpy as np
 import argparse
 
+sys.path.append(os.path.join("..", ".."))
 from mmd.mmd import MMD_with_sample
 from mmd.mmd_data_load import load_all_the_data_harvar, load_all_the_data_realdisp
-
-sys.path.append(os.path.join("..", ".."))
 
 from dataloaders.utils import Normalizer
 
