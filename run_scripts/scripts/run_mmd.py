@@ -7,9 +7,13 @@ import argparse
 
 sys.path.append(os.path.join("..", ".."))
 from mmd.mmd import MMD_with_sample
-from mmd.mmd_data_load import load_all_the_data_harvar, load_all_the_data_realdisp
+from dataloaders.dataloader_HARVAR_har import HARVARUtils
+from dataloaders.dataloader_HARVAR_har import HARVAR_CV
+from dataloaders.dataloader_REALDISP_har import REALDISPUtils
+from dataloaders.dataloader_REALDISP_har import REALDISP_CV
 
 from dataloaders.utils import Normalizer
+from configs.config_consts import REALDISP_CV, HARVAR_CV
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -40,26 +44,29 @@ def run(dataset, device1, device2):
         return
 
     if dataset == 'harvar':
+        data_utils = HARVARUtils()
         # harvar
         # iterating through 8 cv
-        full_1_x, full_1_y = load_all_the_data_harvar(device1)
+        full_1_x, full_1_y = data_utils.load_all_the_data_harvar(device1, HARVAR_CV, True)
         # normalization
         full_1_x = normalization(full_1_x)
-        full_2_x, full_2_y = load_all_the_data_harvar(device2)
+        full_2_x, full_2_y = data_utils.load_all_the_data_harvar(device2, HARVAR_CV, True)
         # normalization
         full_2_x = normalization(full_2_x)
-        num_cv = 8
+        num_cv = len(HARVAR_CV)
 
     else:
+        data_utils = REALDISPUtils()
+        root_path = os.path.join('..', '..', 'data', 'realdisp')
         # realdisp
         # iterating through 34 cv
-        full_1_x, full_1_y = load_all_the_data_realdisp(device1)
+        full_1_x, full_1_y = data_utils.load_all_the_data_realdisp(root_path, device1, REALDISP_CV)
         # normalization
         full_1_x = normalization(full_1_x)
-        full_2_x, full_2_y = load_all_the_data_realdisp(device2)
+        full_2_x, full_2_y = data_utils.load_all_the_data_realdisp(root_path, device2, REALDISP_CV)
         # normalization
         full_2_x = normalization(full_2_x)
-        num_cv = 17
+        num_cv = len(REALDISP_CV)
 
     # create a dataframe to store the mean mmd results on 3 axis
     mean_mmd = pd.DataFrame(columns=['CV', 'Acc_X', 'Acc_Y', 'Acc_Z', 'std_div_x', 'std_div_y', 'std_div_z'])

@@ -84,6 +84,7 @@ def run_train_process_with_data(data_set_index):
     args.sensor_select = None
     args.representation_type = "time"
     args.exp_mode = "LOCV"
+    args.only_walking = True
 
     config_file = open('../../configs/data.yaml', mode='r')
     data_config = yaml.load(config_file, Loader=yaml.FullLoader)
