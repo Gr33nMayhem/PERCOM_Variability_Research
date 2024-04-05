@@ -15,6 +15,7 @@ while [ ! -z "$(dcgmi -v | grep 'Hostengine build info:')" ]; do
 done
 cd ~/projects/def-plago/akhaked/PERCOM_Variability_Model_Research/run_scripts/scripts
 module purge
+module load StdEnv/2020
 module load python/3.11 scipy-stack
 source ~/py311/bin/activate
 python test_libs.py
