@@ -376,7 +376,7 @@ class Exp(object):
                 test_time = time.time()
                 test_loss, test_acc, test_f_w, test_f_macro, test_f_micro = self.validation(self.model, test_loader,
                                                                                             criterion, iter + 1)
-                logging.info("Test for CV: {} cost time: {}".format(iter + 1, time.time() - test_time))
+                logging.info("Test for CV: {} cost time: {}".format(iter, time.time() - test_time))
                 logging.info(
                     "Final Test Performance : Test Accuracy: {0:.7f}  Test weighted F1: {1:.7f}  Test macro F1 {2:.7f} ".format(
                         test_acc, test_f_w, test_f_macro))

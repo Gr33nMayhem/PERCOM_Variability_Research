@@ -91,6 +91,7 @@ def run_test_process_with_data(model_device, test_device):
     args.sensor_select = None
     args.representation_type = "time"
     args.exp_mode = "LOCV"
+    args.only_walking = True
     args.exp_objective = "test"
 
     config_file = open('../../configs/data.yaml', mode='r')

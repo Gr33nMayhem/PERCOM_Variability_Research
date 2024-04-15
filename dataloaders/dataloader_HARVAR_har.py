@@ -157,16 +157,16 @@ class HARVARUtils:
         temp = pd.read_csv(
             os.path.join(path, participant_id + '-' + device_id + '-' + directory_name + '.csv'))
         for activity in activities.keys():
-            temp = self.extract_labelled_data_only(temp, participant_id, root_path, activity)
-            temp = temp[['Acc_X', 'Acc_Y', 'Acc_Z']]
-            temp.columns = ['x', 'y', 'z']
-            temp.reset_index(drop=True, inplace=True)
-            subj = pd.DataFrame({'sub_id': (np.zeros(temp.shape[0]) + participant_num)})
-            temp = subj.join(temp)
-            subj = pd.DataFrame({'sub': (np.zeros(temp.shape[0]) + participant_num)})
-            temp = temp.join(subj)
-            temp = temp.join(pd.DataFrame({'activity_id': np.zeros(temp.shape[0]) + activities[activity]}))
-            data_x = pd.concat([data_x, temp])
+            activity_data = self.extract_labelled_data_only(temp, participant_id, root_path, activity)
+            activity_data = activity_data[['Acc_X', 'Acc_Y', 'Acc_Z']]
+            activity_data.columns = ['x', 'y', 'z']
+            activity_data.reset_index(drop=True, inplace=True)
+            subj = pd.DataFrame({'sub_id': (np.zeros(activity_data.shape[0]) + participant_num)})
+            activity_data = subj.join(activity_data)
+            subj = pd.DataFrame({'sub': (np.zeros(activity_data.shape[0]) + participant_num)})
+            activity_data = activity_data.join(subj)
+            activity_data = activity_data.join(pd.DataFrame({'activity_id': np.zeros(activity_data.shape[0]) + activities[activity]}))
+            data_x = pd.concat([data_x, activity_data])
             data_y = pd.concat(
-                [data_y, pd.DataFrame({'activity_id': (np.zeros(temp.shape[0]) + activities[activity])})])
+                [data_y, pd.DataFrame({'activity_id': (np.zeros(activity_data.shape[0]) + activities[activity])})])
         return data_x, data_y
