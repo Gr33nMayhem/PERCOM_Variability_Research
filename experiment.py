@@ -97,7 +97,7 @@ class Exp(object):
             data_loader = DataLoader(data,
                                      batch_size=self.args.batch_size,
                                      shuffle=shuffle_flag,
-                                     num_workers=0,
+                                     num_workers=4,
                                      drop_last=False)
         return data_loader
 
