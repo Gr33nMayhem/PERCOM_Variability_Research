@@ -12,7 +12,7 @@ parser.add_argument('--device2', type=str, help='Device 2 Name for training')
 device1 = parser.parse_args().device1
 device2 = parser.parse_args().device2
 
-if device1 is not None and device2 is not None:
+if device1 is not None and device2 is not None and device1 != "" and device2 != "":
     run_test_process_with_data(device1, device1)
     run_test_process_with_data(device2, device2)
     run_test_process_with_data(device1, device2)
