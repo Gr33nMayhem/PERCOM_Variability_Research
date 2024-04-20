@@ -2,7 +2,7 @@
 #SBATCH --account=def-plago
 #SBATCH --export=ALL,DISABLE_DCGM=1
 #SBATCH --gpus-per-node=v100:1
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=16
 #SBATCH --time=24:0:0
