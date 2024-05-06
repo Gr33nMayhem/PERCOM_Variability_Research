@@ -39,9 +39,9 @@ def normalization(train_vali, test=None):
 
 
 def run(dataset, device1, device2):
-    if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
-        print('mmd results already exist')
-        return
+    # if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
+    #     print('mmd results already exist')
+    #     return
 
     if dataset == 'harvar':
         data_utils = HARVARUtils()
@@ -68,6 +68,9 @@ def run(dataset, device1, device2):
         full_2_x = normalization(full_2_x)
         num_cv = len(REALDISP_CV)
 
+    # bandwidth ranges
+    bandwidth_range = [0.2, 0.5, 0.9, 1.3, 1.5, 1.6]
+
     # create a dataframe to store the mean mmd results on 3 axis
     mean_mmd = pd.DataFrame(columns=['CV', 'Acc_X', 'Acc_Y', 'Acc_Z', 'std_div_x', 'std_div_y', 'std_div_z'])
     for i in range(1, num_cv + 1):
@@ -78,9 +81,9 @@ def run(dataset, device1, device2):
         train = train.iloc[:, 1:-1].to_numpy()
         test = test.iloc[:, 1:-1].to_numpy()
         # get mmd distance for Acc_X, Acc_Y, Acc_Z
-        mean_mmd_x, std_div_x = MMD_with_sample(train[:, 0], test[:, 0], 10000, 500, 'multiscale')
-        mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 10000, 500, 'multiscale')
-        mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 10000, 500, 'multiscale')
+        mean_mmd_x, std_div_x = MMD_with_sample(train[:, 0], test[:, 0], 100, 50000, 'multiscale', bandwidth_range)
+        mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 100, 50000, 'multiscale', bandwidth_range)
+        mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 100, 50000, 'multiscale', bandwidth_range)
         # store the results in the dataframe
         mean_mmd = pd.concat([mean_mmd, pd.DataFrame({'CV': i, 'Acc_X': mean_mmd_x, 'Acc_Y': mean_mmd_y,
                                                       'Acc_Z': mean_mmd_z, 'std_div_x': std_div_x,
