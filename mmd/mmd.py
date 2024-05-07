@@ -37,6 +37,9 @@ def MMD(x, y, kernel, bandwidth_range):
 
 
 def MMD_with_sample(x, y, split_size, iterations, kernal, bandwidth_range):
+    # print the shape of x and y
+    print(x.shape)
+    print(y.shape)
     '''Big brain time'''
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     all_mmd = []
