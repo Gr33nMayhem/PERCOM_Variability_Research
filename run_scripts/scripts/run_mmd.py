@@ -53,7 +53,7 @@ def run(dataset, device1, device2):
         full_2_x, full_2_y = data_utils.load_all_the_data_harvar(device2, HARVAR_CV, True)
         # normalization
         full_2_x = normalization(full_2_x)
-        num_cv = len(HARVAR_CV)
+        participants = HARVAR_CV
 
     else:
         data_utils = REALDISPUtils()
@@ -66,14 +66,14 @@ def run(dataset, device1, device2):
         full_2_x, full_2_y = data_utils.load_all_the_data_realdisp(root_path, device2, REALDISP_CV)
         # normalization
         full_2_x = normalization(full_2_x)
-        num_cv = len(REALDISP_CV)
+        participants = REALDISP_CV
 
     # bandwidth ranges
     bandwidth_range = [0.2, 0.5, 0.9, 1.3, 1.5, 1.6]
 
     # create a dataframe to store the mean mmd results on 3 axis
     mean_mmd = pd.DataFrame(columns=['CV', 'Acc_X', 'Acc_Y', 'Acc_Z', 'std_div_x', 'std_div_y', 'std_div_z'])
-    for i in range(1, num_cv + 1):
+    for i in participants:
         print('Starting cv', i)
         train = full_1_x[full_1_x['sub_id'] != i]
         test = full_2_x[full_2_x['sub_id'] == i]
