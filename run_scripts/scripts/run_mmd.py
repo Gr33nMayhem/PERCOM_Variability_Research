@@ -79,6 +79,12 @@ def run(dataset, device1, device2):
         print('Starting cv', i)
         train = full_1_x[full_1_x['sub_id'] != i]
         test = full_2_x[full_2_x['sub_id'] == i]
+
+        # if either of the test and train is empty, skip the cv. empty could be due to the fact that data is missing.
+        if train.shape[0] == 0 or test.shape[0] == 0:
+            print('Skipping cv', i)
+            continue
+
         # get only the 'Acc_X', 'Acc_Y', 'Acc_Z' columns as numpy matrix
         train = train.iloc[:, 1:-1].to_numpy()
         test = test.iloc[:, 1:-1].to_numpy()
