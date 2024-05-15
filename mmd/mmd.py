@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from scipy.special import kl_div
 
 
 def MMD(x, y, kernel, bandwidth_range):
@@ -43,6 +44,7 @@ def MMD_with_sample(x, y, split_size, iterations, kernal, bandwidth_range):
     '''Big brain time'''
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     all_mmd = []
+    # all_kldv = []
     for split in range(iterations):
         # get a random number between 0 and len(x) - split_size
         rand_ind = np.random.randint(0, len(x) - split_size)
@@ -50,12 +52,16 @@ def MMD_with_sample(x, y, split_size, iterations, kernal, bandwidth_range):
         # get a random number between 0 and len(y) - split_size
         rand_ind = np.random.randint(0, len(y) - split_size)
         b2 = y[rand_ind:rand_ind + split_size]
-        tensor_a = torch.from_numpy(np.reshape(b1, (len(b1), 1))).to(device)
-        tensor_b = torch.from_numpy(np.reshape(b2, (len(b2), 1))).to(device)
+        tensor_a = torch.from_numpy(b1).to(device)
+        tensor_b = torch.from_numpy(b2).to(device)
         all_mmd.append(MMD(tensor_a, tensor_b, kernal, bandwidth_range).item())
+        # all_kldv.append(kl_div(b1, b2))
 
     all_mmd = np.array(all_mmd)
     mean_mmd = np.mean(all_mmd)
     std_dev_mmd = np.std(all_mmd)
+    # all_kldv = np.array(all_kldv)
+    # mean_kldv = np.mean(all_kldv)
+    # std_dev_kldv = np.std(all_kldv)
 
-    return mean_mmd, std_dev_mmd
+    return mean_mmd, std_dev_mmd, #mean_kldv, std_dev_kldv

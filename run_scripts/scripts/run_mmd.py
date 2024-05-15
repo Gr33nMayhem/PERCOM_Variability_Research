@@ -22,6 +22,8 @@ parser.add_argument('--dataset', type=str, help='Dataset Name')
 parser.add_argument('--device_train', type=str, help='Device Name of training')
 parser.add_argument('--device_test', type=str, help='Device Name of testing')
 
+load_only_walking = True
+
 
 def normalization(train_vali, test=None):
     train_vali_sensors = train_vali.iloc[:, 1:-1]
@@ -39,18 +41,18 @@ def normalization(train_vali, test=None):
 
 
 def run(dataset, device1, device2):
-    # if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
-    #     print('mmd results already exist')
-    #     return
+    if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
+        print('mmd results already exist')
+        return
 
     if dataset == 'harvar':
         data_utils = HARVARUtils()
         # harvar
         # iterating through 8 cv
-        full_1_x, full_1_y = data_utils.load_all_the_data_harvar(device1, HARVAR_CV, True)
+        full_1_x, full_1_y = data_utils.load_all_the_data_harvar(device1, HARVAR_CV, load_only_walking)
         # normalization
         full_1_x = normalization(full_1_x)
-        full_2_x, full_2_y = data_utils.load_all_the_data_harvar(device2, HARVAR_CV, True)
+        full_2_x, full_2_y = data_utils.load_all_the_data_harvar(device2, HARVAR_CV, load_only_walking)
         # normalization
         full_2_x = normalization(full_2_x)
         participants = HARVAR_CV
@@ -72,7 +74,7 @@ def run(dataset, device1, device2):
     bandwidth_range = [0.2, 0.5, 0.9, 1.3, 1.5, 1.6]
 
     # create a dataframe to store the mean mmd results on 3 axis
-    mean_mmd = pd.DataFrame(columns=['CV', 'Acc_X', 'Acc_Y', 'Acc_Z', 'std_div_x', 'std_div_y', 'std_div_z'])
+    mean_mmd = pd.DataFrame(columns=['CV', 'activity', 'mmd', 'std_div'])
     for i in participants:
         print('Starting cv', i)
         train = full_1_x[full_1_x['sub_id'] != i]
@@ -81,14 +83,16 @@ def run(dataset, device1, device2):
         train = train.iloc[:, 1:-1].to_numpy()
         test = test.iloc[:, 1:-1].to_numpy()
         # get mmd distance for Acc_X, Acc_Y, Acc_Z
-        mean_mmd_x, std_div_x = MMD_with_sample(train[:, 0], test[:, 0], 100, 50000, 'multiscale', bandwidth_range)
-        mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 100, 50000, 'multiscale', bandwidth_range)
-        mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 100, 50000, 'multiscale', bandwidth_range)
+        mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
+
+        # mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 100, 50000, 'multiscale', bandwidth_range)
+        # mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 100, 50000, 'multiscale', bandwidth_range)
         # store the results in the dataframe
-        mean_mmd = pd.concat([mean_mmd, pd.DataFrame({'CV': i, 'Acc_X': mean_mmd_x, 'Acc_Y': mean_mmd_y,
-                                                      'Acc_Z': mean_mmd_z, 'std_div_x': std_div_x,
-                                                      'std_div_y': std_div_y, 'std_div_z': std_div_z, }, index=[0])],
-                             ignore_index=True)
+        mean_mmd = pd.concat(
+            [mean_mmd,
+             pd.DataFrame({'CV': i, 'mmd': mmd, 'std_div_mmd': mmd_std_div},
+                          index=[0])],
+            ignore_index=True)
     # save the results in a csv file
     if not os.path.exists(os.path.join('..', '..', 'data', 'mmd')):
         os.makedirs(os.path.join('..', '..', 'data', 'mmd'))
@@ -101,3 +105,4 @@ run(args.dataset, args.device_train, args.device_test)
 run(args.dataset, args.device_test, args.device_train)
 run(args.dataset, args.device_train, args.device_train)
 run(args.dataset, args.device_test, args.device_test)
+# run('harvar', 'empatica-left', 'empatica-right')
