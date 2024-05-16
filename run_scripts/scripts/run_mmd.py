@@ -76,17 +76,17 @@ def run(dataset, device1, device2):
     # create a dataframe to store the mean mmd results on 3 axis
     mean_mmd = pd.DataFrame(columns=['CV', 'activity', 'mmd', 'std_div'])
 
-    # join full_1_x and full_1_y as a new column
     full_1_x = pd.concat([full_1_x, full_1_y], axis=1)
+    full_2_x = pd.concat([full_2_x, full_2_y], axis=1)
 
     # activities are the unique values in the full_1_y df
-    activities = full_1_y['activity'].unique()
+    activities = full_1_y.unique()
 
     for i in participants:
         for j in activities:
             # filter out the activity in focus
-            full_1_x_activity = full_1_x[full_1_x['activity'] == j]
-            full_2_x_activity = full_2_x[full_2_x['activity'] == j]
+            full_1_x_activity = full_1_x[full_1_x['activity_id'] == j]
+            full_2_x_activity = full_2_x[full_2_x['activity_id'] == j]
             print('Starting cv', i)
             train = full_1_x_activity[full_1_x_activity['sub_id'] != i]
             test = full_2_x_activity[full_2_x_activity['sub_id'] == i]
@@ -95,6 +95,10 @@ def run(dataset, device1, device2):
             if train.shape[0] == 0 or test.shape[0] == 0:
                 print('Skipping cv', i)
                 continue
+
+            # drop the activity column
+            train = train.drop(columns=['activity_id'])
+            test = test.drop(columns=['activity_id'])
 
             # get only the 'Acc_X', 'Acc_Y', 'Acc_Z' columns as numpy matrix
             train = train.iloc[:, 1:-1].to_numpy()
@@ -117,9 +121,9 @@ def run(dataset, device1, device2):
                     index=False)
 
 
-args = parser.parse_args()
-run(args.dataset, args.device_train, args.device_test)
-run(args.dataset, args.device_test, args.device_train)
-run(args.dataset, args.device_train, args.device_train)
-run(args.dataset, args.device_test, args.device_test)
-# run('harvar', 'empatica-left', 'empatica-right')
+# args = parser.parse_args()
+# run(args.dataset, args.device_train, args.device_test)
+# run(args.dataset, args.device_test, args.device_train)
+# run(args.dataset, args.device_train, args.device_train)
+# run(args.dataset, args.device_test, args.device_test)
+run('harvar', 'empatica-left', 'empatica-right')
