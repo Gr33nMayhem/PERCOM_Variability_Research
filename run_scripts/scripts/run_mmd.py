@@ -75,30 +75,41 @@ def run(dataset, device1, device2):
 
     # create a dataframe to store the mean mmd results on 3 axis
     mean_mmd = pd.DataFrame(columns=['CV', 'activity', 'mmd', 'std_div'])
+
+    # join full_1_x and full_1_y as a new column
+    full_1_x = pd.concat([full_1_x, full_1_y], axis=1)
+
+    # activities are the unique values in the full_1_y df
+    activities = full_1_y['activity'].unique()
+
     for i in participants:
-        print('Starting cv', i)
-        train = full_1_x[full_1_x['sub_id'] != i]
-        test = full_2_x[full_2_x['sub_id'] == i]
+        for j in activities:
+            # filter out the activity in focus
+            full_1_x_activity = full_1_x[full_1_x['activity'] == j]
+            full_2_x_activity = full_2_x[full_2_x['activity'] == j]
+            print('Starting cv', i)
+            train = full_1_x_activity[full_1_x_activity['sub_id'] != i]
+            test = full_2_x_activity[full_2_x_activity['sub_id'] == i]
 
-        # if either of the test and train is empty, skip the cv. empty could be due to the fact that data is missing.
-        if train.shape[0] == 0 or test.shape[0] == 0:
-            print('Skipping cv', i)
-            continue
+            # if either of the test and train is empty, skip the cv. empty due to data missing.
+            if train.shape[0] == 0 or test.shape[0] == 0:
+                print('Skipping cv', i)
+                continue
 
-        # get only the 'Acc_X', 'Acc_Y', 'Acc_Z' columns as numpy matrix
-        train = train.iloc[:, 1:-1].to_numpy()
-        test = test.iloc[:, 1:-1].to_numpy()
-        # get mmd distance for Acc_X, Acc_Y, Acc_Z
-        mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
+            # get only the 'Acc_X', 'Acc_Y', 'Acc_Z' columns as numpy matrix
+            train = train.iloc[:, 1:-1].to_numpy()
+            test = test.iloc[:, 1:-1].to_numpy()
+            # get mmd distance for Acc_X, Acc_Y, Acc_Z
+            mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
 
-        # mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 100, 50000, 'multiscale', bandwidth_range)
-        # mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 100, 50000, 'multiscale', bandwidth_range)
-        # store the results in the dataframe
-        mean_mmd = pd.concat(
-            [mean_mmd,
-             pd.DataFrame({'CV': i, 'mmd': mmd, 'std_div_mmd': mmd_std_div},
-                          index=[0])],
-            ignore_index=True)
+            # mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 100, 50000, 'multiscale', bandwidth_range)
+            # mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 100, 50000, 'multiscale', bandwidth_range)
+            # store the results in the dataframe
+            mean_mmd = pd.concat(
+                [mean_mmd,
+                 pd.DataFrame({'CV': i, 'mmd': mmd, 'std_div_mmd': mmd_std_div, 'activity': j},
+                              index=[0])],
+                ignore_index=True)
     # save the results in a csv file
     if not os.path.exists(os.path.join('..', '..', 'data', 'mmd')):
         os.makedirs(os.path.join('..', '..', 'data', 'mmd'))
