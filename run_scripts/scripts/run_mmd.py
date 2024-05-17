@@ -4,9 +4,11 @@ import os
 import pandas as pd
 import numpy as np
 import argparse
+import yaml
 
 sys.path.append(os.path.join("..", ".."))
 from mmd.mmd import MMD_with_sample
+from scipy.signal import resample
 from dataloaders.dataloader_HARVAR_har import HARVARUtils
 from dataloaders.dataloader_HARVAR_har import HARVAR_CV
 from dataloaders.dataloader_REALDISP_har import REALDISPUtils
@@ -40,12 +42,35 @@ def normalization(train_vali, test=None):
         return train_vali_sensors, test_sensors
 
 
+def resample_data(data_x, orig_sampling_rate, new_sampling_rate):
+    data_len_orig = data_x.shape[0]
+    data_len_new = int(data_len_orig * new_sampling_rate / orig_sampling_rate)
+    # resample the data
+    data_x = resample(data_x, data_len_new)
+
+    return data_x
+
+
 def run(dataset, device1, device2):
     if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
         print('mmd results already exist')
         return
 
     if dataset == 'harvar':
+        if device1.find("maxim") != -1:
+            data_name = 'harvar_maxim'
+        elif device1.find("empatica") != -1:
+            data_name = 'harvar_empat'
+        elif device1.find("bluesense") != -1:
+            data_name = 'harvar_bluesense'
+
+        if device2.find("maxim") != -1:
+            test_data_name = 'harvar_maxim'
+        elif device2.find("empatica") != -1:
+            test_data_name = 'harvar_empat'
+        elif device2.find("bluesense") != -1:
+            test_data_name = 'harvar_bluesense'
+
         data_utils = HARVARUtils()
         # harvar
         # iterating through 8 cv
@@ -55,6 +80,22 @@ def run(dataset, device1, device2):
         full_2_x, full_2_y = data_utils.load_all_the_data_harvar(device2, HARVAR_CV, load_only_walking)
         # normalization
         full_2_x = normalization(full_2_x)
+
+
+        if data_name == 'harvar_maxim':
+            train_sampling_rate = 25
+        if data_name == 'harvar_empat':
+            train_sampling_rate = 64
+        if data_name == 'harvar_bluesense':
+            train_sampling_rate = 100
+
+        if test_data_name == 'harvar_maxim':
+            test_sampling_rate = 25
+        if test_data_name == 'harvar_empat':
+            test_sampling_rate = 64
+        if test_data_name == 'harvar_bluesense':
+            test_sampling_rate = 100
+
         participants = HARVAR_CV
 
     else:
@@ -103,6 +144,11 @@ def run(dataset, device1, device2):
             # get only the 'Acc_X', 'Acc_Y', 'Acc_Z' columns as numpy matrix
             train = train.iloc[:, 1:-1].to_numpy()
             test = test.iloc[:, 1:-1].to_numpy()
+
+            if data_name != test_data_name:
+                # resample the data
+                test = resample_data(test, test_sampling_rate, train_sampling_rate)
+
             # get mmd distance for Acc_X, Acc_Y, Acc_Z
             mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
 
@@ -121,9 +167,9 @@ def run(dataset, device1, device2):
                     index=False)
 
 
-# args = parser.parse_args()
-# run(args.dataset, args.device_train, args.device_test)
-# run(args.dataset, args.device_test, args.device_train)
-# run(args.dataset, args.device_train, args.device_train)
-# run(args.dataset, args.device_test, args.device_test)
-run('harvar', 'empatica-left', 'empatica-right')
+args = parser.parse_args()
+run(args.dataset, args.device_train, args.device_test)
+run(args.dataset, args.device_test, args.device_train)
+run(args.dataset, args.device_train, args.device_train)
+run(args.dataset, args.device_test, args.device_test)
+# run('harvar', 'empatica-left', 'bluesense-LWR')
