@@ -1,13 +1,12 @@
-import torch
-import sys
-import os
-import pandas as pd
-import numpy as np
 import argparse
-import yaml
+import os
+import sys
+
+import pandas as pd
+import torch
 
 sys.path.append(os.path.join("..", ".."))
-from mmd.mmd import MMD_with_sample
+from mmd.mmd import MMD_with_freq
 from scipy.signal import resample
 from dataloaders.dataloader_HARVAR_har import HARVARUtils
 from dataloaders.dataloader_HARVAR_har import HARVAR_CV
@@ -52,7 +51,8 @@ def resample_data(data_x, orig_sampling_rate, new_sampling_rate):
 
 
 def run(dataset, device1, device2):
-    if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
+    if os.path.exists(
+            os.path.join('..', '..', 'data', 'mmd', 'freq', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
         print('mmd results already exist')
         return
 
@@ -80,7 +80,6 @@ def run(dataset, device1, device2):
         full_2_x, full_2_y = data_utils.load_all_the_data_harvar(device2, HARVAR_CV, load_only_walking)
         # normalization
         full_2_x = normalization(full_2_x)
-
 
         if data_name == 'harvar_maxim':
             train_sampling_rate = 25
@@ -115,7 +114,7 @@ def run(dataset, device1, device2):
     bandwidth_range = [0.2, 0.5, 0.9, 1.3, 1.5, 1.6]
 
     # create a dataframe to store the mean mmd results on 3 axis
-    mean_mmd = pd.DataFrame(columns=['CV', 'activity', 'mmd', 'std_div'])
+    mean_mmd = pd.DataFrame(columns=['CV', 'activity', 'mean_mmd_x', 'mean_mmd_y', 'mean_mmd_z'])
 
     full_1_x = pd.concat([full_1_x, full_1_y], axis=1)
     full_2_x = pd.concat([full_2_x, full_2_y], axis=1)
@@ -150,20 +149,21 @@ def run(dataset, device1, device2):
                 test = resample_data(test, test_sampling_rate, train_sampling_rate)
 
             # get mmd distance for Acc_X, Acc_Y, Acc_Z
-            mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
-
-            # mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 100, 50000, 'multiscale', bandwidth_range)
-            # mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 100, 50000, 'multiscale', bandwidth_range)
+            # mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
+            mean_mmd_x = MMD_with_freq(train[:, 0], test[:, 0], 10000, 'multiscale', bandwidth_range)
+            mean_mmd_y = MMD_with_freq(train[:, 1], test[:, 1], 10000, 'multiscale', bandwidth_range)
+            mean_mmd_z = MMD_with_freq(train[:, 2], test[:, 2], 10000, 'multiscale', bandwidth_range)
             # store the results in the dataframe
             mean_mmd = pd.concat(
                 [mean_mmd,
-                 pd.DataFrame({'CV': i, 'mmd': mmd, 'std_div': mmd_std_div, 'activity': j},
+                 pd.DataFrame({'CV': i, 'mean_mmd_x': mean_mmd_x, 'mean_mmd_y': mean_mmd_y,
+                               'mean_mmd_z': mean_mmd_z, 'activity': j},
                               index=[0])],
                 ignore_index=True)
     # save the results in a csv file
-    if not os.path.exists(os.path.join('..', '..', 'data', 'mmd')):
-        os.makedirs(os.path.join('..', '..', 'data', 'mmd'))
-    mean_mmd.to_csv(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv'),
+    if not os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'freq')):
+        os.makedirs(os.path.join('..', '..', 'data', 'mmd', 'freq'))
+    mean_mmd.to_csv(os.path.join('..', '..', 'data', 'mmd', 'freq', 'mmd_results_' + device1 + '_' + device2 + '.csv'),
                     index=False)
 
 
