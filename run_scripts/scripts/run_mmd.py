@@ -115,7 +115,7 @@ def run(dataset, device1, device2):
     bandwidth_range = [0.2, 0.5, 0.9, 1.3, 1.5, 1.6]
 
     # create a dataframe to store the mean mmd results on 3 axis
-    mean_mmd = pd.DataFrame(columns=['CV', 'activity', 'mmd', 'std_div'])
+    mean_mmd = pd.DataFrame(columns=['CV', 'activity', 'mmd', 'std_div_mmd'])
 
     full_1_x = pd.concat([full_1_x, full_1_y], axis=1)
     full_2_x = pd.concat([full_2_x, full_2_y], axis=1)
@@ -157,7 +157,7 @@ def run(dataset, device1, device2):
             # store the results in the dataframe
             mean_mmd = pd.concat(
                 [mean_mmd,
-                 pd.DataFrame({'CV': i, 'mmd': mmd, 'std_div': mmd_std_div, 'activity': j},
+                 pd.DataFrame({'CV': i, 'mmd': mmd, 'std_div_mmd': mmd_std_div, 'activity': j},
                               index=[0])],
                 ignore_index=True)
     # save the results in a csv file
