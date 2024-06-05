@@ -99,6 +99,8 @@ def run(dataset, device1, device2):
         participants = HARVAR_CV
 
     else:
+        data_name = None
+        test_data_name = None
         data_utils = REALDISPUtils()
         root_path = os.path.join('..', '..', 'data', 'realdisp')
         # realdisp
