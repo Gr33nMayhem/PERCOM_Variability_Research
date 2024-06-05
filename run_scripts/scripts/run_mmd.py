@@ -145,7 +145,7 @@ def run(dataset, device1, device2):
             train = train.iloc[:, 1:-1].to_numpy()
             test = test.iloc[:, 1:-1].to_numpy()
 
-            if data_name != test_data_name:
+            if data_name is None and data_name != test_data_name:
                 # resample the data
                 test = resample_data(test, test_sampling_rate, train_sampling_rate)
 
