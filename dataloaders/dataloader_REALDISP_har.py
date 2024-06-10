@@ -23,7 +23,7 @@ REALDISP_COLS = ['time_sec', 'time_msec', 'RLA_ACC_X', 'RLA_ACC_Y', 'RLA_ACC_Z',
                  'LC_GYR_Y', 'LC_GYR_Z', 'LC_MAG_X', 'LC_MAG_Y', 'LC_MAG_Z', 'LC_ORI_1', 'LC_ORI_2',
                  'LC_ORI_3', 'LC_ORI_4', 'activity_id', 'sub_id']
 
-REALDISP_CV = [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+REALDISP_CV = [1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
 
 
 # ================================= HARVAR DATASET ============================================
