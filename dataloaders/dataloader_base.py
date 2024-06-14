@@ -156,7 +156,8 @@ class BASE_DATA():
                 # update the index_of_cv for the next iteration
                 self.index_of_cv = self.index_of_cv + 1
 
-
+            print("training with the following participants: ", self.train_keys)
+            print("testing with the following participants: ", self.test_keys)
             # Normalization the data
             train_vali_x = pd.DataFrame()
             for sub in self.train_keys:
