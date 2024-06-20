@@ -76,10 +76,10 @@ def run(dataset, device1, device2):
         # iterating through 8 cv
         full_1_x, full_1_y = data_utils.load_all_the_data_harvar(device1, HARVAR_CV, load_only_walking)
         # normalization
-        full_1_x = normalization(full_1_x)
+        # full_1_x = normalization(full_1_x)
         full_2_x, full_2_y = data_utils.load_all_the_data_harvar(device2, HARVAR_CV, load_only_walking)
         # normalization
-        full_2_x = normalization(full_2_x)
+        # full_2_x = normalization(full_2_x)
 
 
         if data_name == 'harvar_maxim':
@@ -107,10 +107,10 @@ def run(dataset, device1, device2):
         # iterating through 34 cv
         full_1_x, full_1_y = data_utils.load_all_the_data_realdisp(root_path, device1, REALDISP_CV)
         # normalization
-        full_1_x = normalization(full_1_x)
+        # full_1_x = normalization(full_1_x)
         full_2_x, full_2_y = data_utils.load_all_the_data_realdisp(root_path, device2, REALDISP_CV)
         # normalization
-        full_2_x = normalization(full_2_x)
+        # full_2_x = normalization(full_2_x)
         participants = REALDISP_CV
 
     # bandwidth ranges
@@ -133,6 +133,8 @@ def run(dataset, device1, device2):
             print('Starting cv', i)
             train = full_1_x_activity[full_1_x_activity['sub_id'] != i]
             test = full_2_x_activity[full_2_x_activity['sub_id'] == i]
+
+            train, test = normalization(train, test)
 
             # if either of the test and train is empty, skip the cv. empty due to data missing.
             if train.shape[0] == 0 or test.shape[0] == 0:
