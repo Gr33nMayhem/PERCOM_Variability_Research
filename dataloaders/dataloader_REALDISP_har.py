@@ -89,9 +89,6 @@ class REALDISP_HAR_DATA_loader(BASE_DATA):
 
     def load_all_the_data(self, root_path):
         print(" ----------------------- load all the data -------------------")
-        # split device string to get the variant and device
-        variant_to_use = self.device.split("-")[1]
-        device_to_use = self.device.split("-")[0]
         return self.data_util.load_all_the_data_realdisp(root_path, self.device, self.all_keys)
 
 
