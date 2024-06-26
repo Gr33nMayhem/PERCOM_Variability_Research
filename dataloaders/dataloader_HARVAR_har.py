@@ -4,6 +4,7 @@ import os
 from scipy.signal import butter, lfilter
 from dataloaders.dataloader_base import BASE_DATA
 from configs.config_consts import HARVAR_CV
+from scipy.signal import resample
 
 HARVAR_CV = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17]
 
@@ -26,6 +27,16 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
         # Filtering channels according to the Position
         self.selected_cols = self.col_names
         # Filtering channels according to the Sensor Type
+
+        self.sampling_freq = args.sampling_freq
+
+        if args.overwrite_sampling_freq:
+            self.new_sampling_freq = args.new_sampling_rate
+            self.overwrite_sampling_rate = True
+        else:
+            self.new_sampling_freq = -1
+            self.overwrite_sampling_rate = False
+
         if self.selected_cols is None:
             self.selected_cols = self.Sensor_filter_acoording_to_pos_and_type(args.sensor_select, self.sensor_filter,
                                                                               self.col_names[1:], "Sensor Type")
@@ -74,7 +85,7 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
         self.drop_activities = [self.labelToId[i] for i in self.drop_activities]
         self.no_drop_activites = [item for item in self.all_labels if item not in self.drop_activities]
 
-        self.data_util = HARVARUtils()
+        self.data_util = HARVARUtils(self.sampling_freq, self.overwrite_sampling_rate, self.new_sampling_freq)
 
         super(HARVAR_HAR_DATA_loader, self).__init__(args)
 
@@ -83,6 +94,11 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
 
 
 class HARVARUtils:
+    def __init__(self, sampling_freq, overwrite_sampling_rate=False, new_sampling_freq=-1):
+        self.overwrite_sampling_rate = overwrite_sampling_rate
+        self.sampling_freq = sampling_freq
+        self.new_sampling_freq = new_sampling_freq
+
     def load_all_the_data_harvar(self, device, participants, only_walking):
         print(" ----------------------- load all the data -------------------")
 
@@ -116,13 +132,13 @@ class HARVARUtils:
 
         data_x = pd.DataFrame(columns=['sub_id', 'x', 'y', 'z'])
         data_y = pd.DataFrame(columns=['activity_id'])
-        length_from_first_device = {}
+
         for key in participants:
             for directory in activity_dict.keys():
                 data_x, data_y = self.load_from_csv(data_x, data_y, "p{:03d}".format(key), key,
                                                     activity_dict[directory],
                                                     directory, root_path, device_dict[device], device)
-                length_from_first_device[key] = data_x.shape[0]
+
         data_y = data_x.iloc[:, -1]
         data_y = data_y.reset_index(drop=True)
         data_x = data_x.iloc[:, :-1]
@@ -160,12 +176,28 @@ class HARVARUtils:
             activity_data = self.extract_labelled_data_only(temp, participant_id, root_path, activity)
             activity_data = activity_data[['Acc_X', 'Acc_Y', 'Acc_Z']]
             activity_data.columns = ['x', 'y', 'z']
+
+            if self.overwrite_sampling_rate:
+                print("Resampling the data to ", self.new_sampling_freq, "Hz")
+                # resample the data to be at the new sampling rate
+                data_len = activity_data.shape[0]
+                new_len = int(data_len * self.new_sampling_freq / self.sampling_freq)
+                # convert to numpy array
+                activity_data_array = activity_data.to_numpy()
+                # resample the data
+                activity_data_array = resample(activity_data_array, new_len)
+                # convert back to pandas dataframe
+                activity_data = pd.DataFrame(activity_data_array, columns=['x', 'y', 'z'])
+            else:
+                print("No resampling")
+
             activity_data.reset_index(drop=True, inplace=True)
             subj = pd.DataFrame({'sub_id': (np.zeros(activity_data.shape[0]) + participant_num)})
             activity_data = subj.join(activity_data)
             subj = pd.DataFrame({'sub': (np.zeros(activity_data.shape[0]) + participant_num)})
             activity_data = activity_data.join(subj)
-            activity_data = activity_data.join(pd.DataFrame({'activity_id': np.zeros(activity_data.shape[0]) + activities[activity]}))
+            activity_data = activity_data.join(
+                pd.DataFrame({'activity_id': np.zeros(activity_data.shape[0]) + activities[activity]}))
             data_x = pd.concat([data_x, activity_data])
             data_y = pd.concat(
                 [data_y, pd.DataFrame({'activity_id': (np.zeros(activity_data.shape[0]) + activities[activity])})])

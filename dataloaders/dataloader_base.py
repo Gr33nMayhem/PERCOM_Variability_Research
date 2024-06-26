@@ -64,7 +64,10 @@ class BASE_DATA():
             self.data_name = args.data_name
             self.device = args.device
             self.windowsize = args.windowsize
-            self.freq = args.sampling_freq
+            if args.overwrite_sampling_rate:
+                self.freq = args.new_sampling_freq
+            else:
+                self.freq = args.sampling_freq
 
         self.window_save_path = args.window_save_path
         window_save_path = os.path.join(self.window_save_path, self.data_name)

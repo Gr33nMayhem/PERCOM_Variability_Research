@@ -18,7 +18,8 @@ parser = argparse.ArgumentParser(
                 'maxim-red: maxim\n' +
                 'maxim-green: maxim')
 parser.add_argument('--device', type=str, help='Device Name for training')
+parser.add_argument('--freq', type=str, help='New sampling freq if freq needs to be modified')
 
 args = parser.parse_args()
 
-run_train_process_with_data(args.device)
+run_train_process_with_data(args.device, args.freq)

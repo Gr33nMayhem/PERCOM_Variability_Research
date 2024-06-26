@@ -20,7 +20,7 @@ The method will train the CV models using three architectures: TinyHAR, Conv-LST
 '''
 
 
-def run_train_process_with_data(data_set_index):
+def run_train_process_with_data(data_set_index, freq=None):
     # set up the logging
     logging.basicConfig(level=logging.INFO)
     logging.info('Start training process with data' + str(data_set_index))
@@ -68,6 +68,14 @@ def run_train_process_with_data(data_set_index):
     else:
         args.data_name = 'harvar'
 
+    ''' Change this if you wish to train the model with different sampling rate.'''
+    if freq is not None or freq != "":
+        args.overwrite_sampling_rate = True
+        args.new_sampling_freq = int(freq)
+    else:
+        args.overwrite_sampling_rate = False
+        args.new_sampling_freq = -1
+
     args.wavelet_filtering = False
     args.wavelet_filtering_regularization = False
     args.wavelet_filtering_finetuning = False
@@ -94,7 +102,10 @@ def run_train_process_with_data(data_set_index):
     args.sampling_freq = config["sampling_freq"]
     args.num_classes = config["num_classes"]
     window_seconds = config["window_seconds"]
-    args.windowsize = int(window_seconds * args.sampling_freq)
+    if args.overwrite_sampling_rate:
+        args.windowsize = int(window_seconds * args.new_sampling_freq)
+    else:
+        args.windowsize = int(window_seconds * args.sampling_freq)
     args.input_length = args.windowsize
     # input information
     args.c_in = config["num_channels"]
@@ -113,6 +124,8 @@ def run_train_process_with_data(data_set_index):
     else:
         args.f_in = 1
 
+    print("Training begins for sensor: ", data_set_index)
+
     args.model_type = "tinyhar"
 
     args.cross_channel_interaction_type = "attn"
@@ -120,28 +133,27 @@ def run_train_process_with_data(data_set_index):
     args.temporal_info_interaction_type = "lstm"
     args.temporal_info_aggregation_type = "tnaive"
     exp = Exp(args)
-    # macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
-    #                                          print_per_layer_stat=True, verbose=False)
-    # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-    # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+    macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
+                                             print_per_layer_stat=True, verbose=False)
+    print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+    print('{:<30}  {:<8}'.format('Number of parameters: ', params))
     exp.train()
 
     args.model_type = "deepconvlstm"
 
     exp = Exp(args)
-    # macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
-    #                                          print_per_layer_stat=True, verbose=False)
-    # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-    # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
+    macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
+                                             print_per_layer_stat=True, verbose=False)
+    print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+    print('{:<30}  {:<8}'.format('Number of parameters: ', params))
 
     exp.train()
 
     args.model_type = "attend"
 
     exp = Exp(args)
-    # macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
-    #                                          print_per_layer_stat=True, verbose=False)
-    # print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
-    # print('{:<30}  {:<8}'.format('Number of parameters: ', params))
-
+    macs, params = get_model_complexity_info(exp.model, (1, args.input_length, args.c_in), as_strings=False,
+                                             print_per_layer_stat=True, verbose=False)
+    print('{:<30}  {:<8}'.format('Computational complexity: ', macs))
+    print('{:<30}  {:<8}'.format('Number of parameters: ', params))
     exp.train()
