@@ -154,3 +154,4 @@ dmypy.json
 
 #data
 data/
+results_notebook/
