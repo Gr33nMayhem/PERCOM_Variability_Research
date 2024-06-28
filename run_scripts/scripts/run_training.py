@@ -22,4 +22,4 @@ parser.add_argument('--freq', type=str, help='New sampling freq if freq needs to
 
 args = parser.parse_args()
 
-run_train_process_with_data(args.device, args.freq)
+run_train_process_with_data('empatica-left', "")
