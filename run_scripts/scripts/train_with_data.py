@@ -37,9 +37,11 @@ def run_train_process_with_data(data_set_index, freq="-1", noise="Y", norm="stan
     if noise == "Y":
         path_modifier = "/no_noise"
     elif norm == "minmax":
-        path_modifier = "/minmax"
+        path_modifier = "/no_norm"
     elif freq != "-1":
         path_modifier = "/no_resamp"
+    else:
+        path_modifier = ""
     args.to_save_path = r"../../data" + path_modifier + "/Run_logs" + "/" + str(data_set_index)
     args.freq_save_path = r"../../data" + path_modifier + "/Freq_data"
     args.window_save_path = r"../../data" + path_modifier + "/Sliding_window" + "/" + str(data_set_index)
@@ -73,11 +75,21 @@ def run_train_process_with_data(data_set_index, freq="-1", noise="Y", norm="stan
         args.data_name = 'harvar_empat'
     elif data_set_index.find("bluesense") != -1:
         args.data_name = 'harvar_bluesense'
+    elif data_set_index.find("gear") != -1:
+        args.data_name = 'hhar_gear'
+    elif data_set_index.find("lgwatch") != -1:
+        args.data_name = 'hhar_lgwatch'
+    elif data_set_index.find("nexus") != -1:
+        args.data_name = 'hhar_nexus'
+    elif data_set_index.find("s3") != -1:
+        args.data_name = 'hhar_s3'
+    elif data_set_index.find("samsung") != -1:
+        args.data_name = 'hhar_samsung'
     else:
         args.data_name = 'harvar'
 
     ''' Change this if you wish to train the model with different sampling rate.'''
-    if freq is not None and (freq != "" or freq != "-1"):
+    if freq is not None and freq != "" and int(freq) != -1:
         args.overwrite_sampling_rate = True
         args.new_sampling_freq = int(freq)
     else:

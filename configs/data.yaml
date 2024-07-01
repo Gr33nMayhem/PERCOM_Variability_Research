@@ -25,3 +25,38 @@ realdisp:
   num_classes: 34
   num_channels: 3
   window_seconds: 2
+
+hhar_gear:
+  filename: "data/hhar"
+  sampling_freq: 100
+  num_classes: 6
+  num_channels: 3
+  window_seconds: 2
+
+hhar_lgwatch:
+  filename: "data/hhar"
+  sampling_freq: 200
+  num_classes: 6
+  num_channels: 3
+  window_seconds: 2
+
+hhar_nexus:
+  filename: "data/hhar"
+  sampling_freq: 200
+  num_classes: 6
+  num_channels: 3
+  window_seconds: 2
+
+hhar_s3:
+    filename: "data/hhar"
+    sampling_freq: 100
+    num_classes: 6
+    num_channels: 3
+    window_seconds: 2
+
+hhar_samsung:
+    filename: "data/hhar"
+    sampling_freq: 50
+    num_classes: 6
+    num_channels: 3
+    window_seconds: 2
