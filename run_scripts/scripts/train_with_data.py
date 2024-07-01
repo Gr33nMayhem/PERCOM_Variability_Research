@@ -20,10 +20,11 @@ The method will train the CV models using three architectures: TinyHAR, Conv-LST
 '''
 
 
-def run_train_process_with_data(data_set_index, freq=None):
+def run_train_process_with_data(data_set_index, freq="-1", noise="Y", norm="standardization"):
     # set up the logging
     logging.basicConfig(level=logging.INFO)
     logging.info('Start training process with data' + str(data_set_index))
+
     class dotdict(dict):
         """dot.notation access to dictionary attributes"""
         __getattr__ = dict.get
@@ -32,13 +33,20 @@ def run_train_process_with_data(data_set_index, freq=None):
 
     args = dotdict()
     # TODO change the path as relative path
-    args.to_save_path = r"../../data/Run_logs" + "/" + str(data_set_index)
-    args.freq_save_path = r"../../data/Freq_data"
-    args.window_save_path = r"../../data/Sliding_window" + "/" + str(data_set_index)
+    path_modifier = ""
+    if noise == "Y":
+        path_modifier = "/no_noise"
+    elif norm == "minmax":
+        path_modifier = "/minmax"
+    elif freq != "-1":
+        path_modifier = "/no_resamp"
+    args.to_save_path = r"../../data" + path_modifier + "/Run_logs" + "/" + str(data_set_index)
+    args.freq_save_path = r"../../data" + path_modifier + "/Freq_data"
+    args.window_save_path = r"../../data" + path_modifier + "/Sliding_window" + "/" + str(data_set_index)
     args.root_path = r"../.."
     args.device = data_set_index
     args.drop_transition = False
-    args.datanorm_type = "standardization"  # None ,"standardization", "minmax"
+    args.datanorm_type = norm  # None ,"standardization", "minmax"
     args.filter_scaling_factor = 1
     args.batch_size = 256
     args.shuffle = True
@@ -69,16 +77,21 @@ def run_train_process_with_data(data_set_index, freq=None):
         args.data_name = 'harvar'
 
     ''' Change this if you wish to train the model with different sampling rate.'''
-    if freq is not None and freq != "":
+    if freq is not None and (freq != "" or freq != "-1"):
         args.overwrite_sampling_rate = True
         args.new_sampling_freq = int(freq)
     else:
         args.overwrite_sampling_rate = False
         args.new_sampling_freq = -1
 
-    args.needs_noise_clean = True
-    args.lowcut = 0.5
-    args.highcut = 40
+    if noise == "Y":
+        args.needs_noise_clean = True
+        args.lowcut = 0.5
+        args.highcut = 40
+    else:
+        args.needs_noise_clean = False
+        args.lowcut = 0
+        args.highcut = 0
 
     args.wavelet_filtering = False
     args.wavelet_filtering_regularization = False

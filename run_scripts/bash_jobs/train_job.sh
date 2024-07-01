@@ -18,4 +18,4 @@ module purge
 module load StdEnv/2020
 module load python/3.11 scipy-stack
 source ~/py311/bin/activate
-python run_training.py --device "$1" --freq "$2"
+python run_training.py --device "$1" --freq "$2" --noise "$3" --norm "$4"
