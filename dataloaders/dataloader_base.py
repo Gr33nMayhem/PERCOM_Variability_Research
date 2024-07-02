@@ -353,6 +353,9 @@ class BASE_DATA():
         data : 3D numpy array [n_samples, n_channels, n_timepoints]
         **ONLY USE THIS FOR 3 Channel Data !!!!!**
         """
+        if data.shape[0] == 0:
+            return data
+
         _, _, data.iloc[:, 1] = self.bandpass_filter(data.iloc[:, 1].to_numpy(), low_cut_off, high_cut_off, fs)
         _, _, data.iloc[:, 2] = self.bandpass_filter(data.iloc[:, 2].to_numpy(), low_cut_off, high_cut_off, fs)
         _, _, data.iloc[:, 3] = self.bandpass_filter(data.iloc[:, 3].to_numpy(), low_cut_off, high_cut_off, fs)
