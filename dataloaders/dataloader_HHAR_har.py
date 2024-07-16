@@ -125,7 +125,7 @@ class HHARUtils:
         if phone_watch == "phone":
             file_name = "/Phones_accelerometer.csv"
         else:
-            file_name = "/Watches_accelerometer.csv"
+            file_name = "/Watch_accelerometer.csv"
 
         file_name = root_path + file_name
         for participant in HHARCV_MAP.keys():
