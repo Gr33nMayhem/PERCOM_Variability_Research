@@ -94,7 +94,7 @@ class HARVAR_HAR_DATA_loader(BASE_DATA):
 
 
 class HARVARUtils:
-    def __init__(self, sampling_freq, overwrite_sampling_rate=False, new_sampling_freq=-1):
+    def __init__(self, sampling_freq=0, overwrite_sampling_rate=False, new_sampling_freq=-1):
         self.overwrite_sampling_rate = overwrite_sampling_rate
         self.sampling_freq = sampling_freq
         self.new_sampling_freq = new_sampling_freq

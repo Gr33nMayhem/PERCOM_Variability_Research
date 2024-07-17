@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import argparse
 import yaml
+from scipy.interpolate import interp1d
 
 sys.path.append(os.path.join("..", ".."))
 from mmd.mmd import MMD_with_sample
@@ -49,6 +50,26 @@ def resample_data(data_x, orig_sampling_rate, new_sampling_rate):
     data_x = resample(data_x, data_len_new)
 
     return data_x
+
+
+def interpolate_data(data_x, orig_sampling_rate, new_sampling_rate):
+    data_len_orig = data_x.shape[0]
+    data_len_new = int(data_len_orig * new_sampling_rate / orig_sampling_rate)
+
+    # Original and new time indices
+    orig_indices = np.arange(data_len_orig)
+    new_indices = np.linspace(0, data_len_orig - 1, data_len_new)
+
+    # Initialize resampled data
+    data_x_resampled = np.zeros((data_len_new, data_x.shape[1]))
+
+    for i in range(data_x.shape[1]):
+        # Create a linear interpolator for each channel
+        interpolator = interp1d(orig_indices, data_x[:, i], kind='linear')
+        # Use the interpolator to get the new data points
+        data_x_resampled[:, i] = interpolator(new_indices)
+
+    return data_x_resampled
 
 
 def run(dataset, device1, device2):
@@ -149,9 +170,9 @@ def run(dataset, device1, device2):
             train = train.iloc[:, 1:-1].to_numpy()
             test = test.iloc[:, 1:-1].to_numpy()
 
-            if data_name is None and data_name != test_data_name:
+            if data_name is not None and data_name != test_data_name:
                 # resample the data
-                test = resample_data(test, test_sampling_rate, train_sampling_rate)
+                test = interpolate_data(test, test_sampling_rate, train_sampling_rate)
 
             # get mmd distance for Acc_X, Acc_Y, Acc_Z
             mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
