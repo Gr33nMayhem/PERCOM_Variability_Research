@@ -20,7 +20,7 @@ The method will train the CV models using three architectures: TinyHAR, Conv-LST
 '''
 
 
-def run_train_process_with_data(data_set_index, variant):
+def run_train_process_with_data(data_set_index, variant, freq="-1", noise="Y", norm="standardization"):
     # set up the logging
     logging.basicConfig(level=logging.INFO)
     logging.info('Start training process with data' + str(data_set_index) + " " + str(variant))
@@ -32,6 +32,15 @@ def run_train_process_with_data(data_set_index, variant):
 
     args = dotdict()
     # TODO change the path as relative path
+    path_modifier = ""
+    if noise == "Y":
+        path_modifier = "/no_noise"
+    elif norm == "minmax":
+        path_modifier = "/no_norm"
+    elif freq != "-1":
+        path_modifier = "/no_resamp"
+    else:
+        path_modifier = ""
     args.to_save_path = r"../../data/Run_logs" + "/" + str(data_set_index) + "-" + str(variant)
     args.freq_save_path = r"../../data/Freq_data"
     args.window_save_path = r"../../data/Sliding_window" + "/" + str(data_set_index) + "-" + str(variant)
@@ -61,6 +70,23 @@ def run_train_process_with_data(data_set_index, variant):
 
     args.data_name = 'realdisp'
 
+    ''' Change this if you wish to train the model with different sampling rate.'''
+    if freq is not None and freq != "" and int(freq) != -1:
+        args.overwrite_sampling_rate = True
+        args.new_sampling_freq = int(freq)
+    else:
+        args.overwrite_sampling_rate = False
+        args.new_sampling_freq = -1
+
+    if noise == "Y":
+        args.needs_noise_clean = True
+        args.lowcut = 0.5
+        args.highcut = 40
+    else:
+        args.needs_noise_clean = False
+        args.lowcut = 0
+        args.highcut = 0
+
     args.wavelet_filtering = False
     args.wavelet_filtering_regularization = False
     args.wavelet_filtering_finetuning = False
@@ -86,7 +112,10 @@ def run_train_process_with_data(data_set_index, variant):
     args.sampling_freq = config["sampling_freq"]
     args.num_classes = config["num_classes"]
     window_seconds = config["window_seconds"]
-    args.windowsize = int(window_seconds * args.sampling_freq)
+    if args.overwrite_sampling_rate:
+        args.windowsize = int(window_seconds * args.new_sampling_freq)
+    else:
+        args.windowsize = int(window_seconds * args.sampling_freq)
     args.input_length = args.windowsize
     # input information
     args.c_in = config["num_channels"]
