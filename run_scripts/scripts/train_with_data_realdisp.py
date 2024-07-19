@@ -41,9 +41,9 @@ def run_train_process_with_data(data_set_index, variant, freq="-1", noise="Y", n
         path_modifier = "/no_resamp"
     else:
         path_modifier = ""
-    args.to_save_path = r"../../data/Run_logs" + "/" + str(data_set_index) + "-" + str(variant)
-    args.freq_save_path = r"../../data/Freq_data"
-    args.window_save_path = r"../../data/Sliding_window" + "/" + str(data_set_index) + "-" + str(variant)
+    args.to_save_path = r"../../data" + path_modifier + "/Run_logs" + "/" + str(data_set_index)
+    args.freq_save_path = r"../../data" + path_modifier + "/Freq_data"
+    args.window_save_path = r"../../data" + path_modifier + "/Sliding_window" + "/" + str(data_set_index)
     args.root_path = r"../.."
     args.device = data_set_index + "-" + variant
     args.drop_transition = False
