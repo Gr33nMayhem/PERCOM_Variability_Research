@@ -18,4 +18,4 @@ module purge
 module load StdEnv/2020
 module load python/3.11 scipy-stack
 source ~/py311/bin/activate
-python run_training_realdisp.py --device "$1" --variant "$2" --freq "$2" --noise "$3" --norm "$4"
+python run_training_realdisp.py --device "$1" --variant "$2" --freq "$3" --noise "$4" --norm "$5"
