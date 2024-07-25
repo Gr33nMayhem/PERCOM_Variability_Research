@@ -81,7 +81,7 @@ def run_test_process_with_data(model_device, test_device, freq="-1", noise="Y", 
     elif model_device.find("samsung") != -1:
         args.data_name = 'hhar_samsung'
     else:
-        args.data_name = 'harvar'
+        args.data_name = 'realdisp'
 
     args.test_device = test_device
 
@@ -102,7 +102,7 @@ def run_test_process_with_data(model_device, test_device, freq="-1", noise="Y", 
     elif test_device.find("samsung") != -1:
         args.test_data_name = 'hhar_samsung'
     else:
-        args.test_data_name = 'harvar'
+        args.test_data_name = 'realdisp'
 
     ''' Change this if you wish to train the model with different sampling rate.'''
     if freq is not None and freq != "" and int(freq) != -1:
