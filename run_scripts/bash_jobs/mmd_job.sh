@@ -18,4 +18,4 @@ module purge
 module load StdEnv/2020
 module load python/3.11 scipy-stack
 source ~/py311/bin/activate
-python run_mmd.py --dataset "$1" --device_train "$2" --device_test "$3"
+python run_mmd.py --dataset "$1" --device_train "$2" --device_test "$3" --base_freq "$4"

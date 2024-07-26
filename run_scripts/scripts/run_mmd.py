@@ -24,6 +24,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, help='Dataset Name')
 parser.add_argument('--device_train', type=str, help='Device Name of training')
 parser.add_argument('--device_test', type=str, help='Device Name of testing')
+parser.add_argument('--base_freq', type=int, help='Base Frequency for resampling')
 
 load_only_walking = True
 
@@ -72,7 +73,7 @@ def interpolate_data(data_x, orig_sampling_rate, new_sampling_rate):
     return data_x_resampled
 
 
-def run(dataset, device1, device2):
+def run(dataset, device1, device2, base_freq):
     if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
         print('mmd results already exist')
         return
@@ -170,9 +171,13 @@ def run(dataset, device1, device2):
             train = train.iloc[:, 1:-1].to_numpy()
             test = test.iloc[:, 1:-1].to_numpy()
 
-            if data_name is not None and data_name != test_data_name:
-                # resample the data
-                test = interpolate_data(test, test_sampling_rate, train_sampling_rate)
+            if base_freq == -1:
+                if data_name is not None and data_name != test_data_name:
+                    # resample the data
+                    test = interpolate_data(test, test_sampling_rate, train_sampling_rate)
+            else:
+                test = resample_data(test, test_sampling_rate, base_freq)
+                train = resample_data(train, train_sampling_rate, base_freq)
 
             # get mmd distance for Acc_X, Acc_Y, Acc_Z
             mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
@@ -193,8 +198,8 @@ def run(dataset, device1, device2):
 
 
 args = parser.parse_args()
-run(args.dataset, args.device_train, args.device_test)
-run(args.dataset, args.device_test, args.device_train)
-run(args.dataset, args.device_train, args.device_train)
-run(args.dataset, args.device_test, args.device_test)
+run(args.dataset, args.device_train, args.device_test, int(args.base_freq))
+run(args.dataset, args.device_test, args.device_train, int(args.base_freq))
+run(args.dataset, args.device_train, args.device_train, int(args.base_freq))
+run(args.dataset, args.device_test, args.device_test, int(args.base_freq))
 # run('harvar', 'empatica-left', 'bluesense-LWR')
