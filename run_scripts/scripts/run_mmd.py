@@ -9,7 +9,7 @@ from scipy.interpolate import interp1d
 
 sys.path.append(os.path.join("..", ".."))
 from mmd.mmd import MMD_with_sample
-from scipy.signal import resample
+from scipy.signal import resample, butter, filtfilt
 from dataloaders.dataloader_HARVAR_har import HARVARUtils
 from dataloaders.dataloader_HARVAR_har import HARVAR_CV
 from dataloaders.dataloader_REALDISP_har import REALDISPUtils
@@ -25,6 +25,7 @@ parser.add_argument('--dataset', type=str, help='Dataset Name')
 parser.add_argument('--device_train', type=str, help='Device Name of training')
 parser.add_argument('--device_test', type=str, help='Device Name of testing')
 parser.add_argument('--base_freq', type=int, help='Base Frequency for resampling')
+parser.add_argument('--noise', type=str, help='Noise removal from data, Y/N')
 
 load_only_walking = True
 
@@ -73,7 +74,30 @@ def interpolate_data(data_x, orig_sampling_rate, new_sampling_rate):
     return data_x_resampled
 
 
-def run(dataset, device1, device2, base_freq):
+def bandpass_filter(data, low_cut_off, high_cut_off, fs=100):
+    low = low_cut_off / fs
+    high = high_cut_off / fs
+    order = 2
+    b, a = butter(order, [low, high], btype='band')
+    y = filtfilt(b, a, data)
+    return b, a, y
+
+
+def noise_band_filter_3D(data, low_cut_off, high_cut_off, fs):
+    """
+    **ONLY USE THIS FOR 3 Channel Data !!!!!**
+    """
+    if data.shape[0] == 0:
+        return data
+
+    _, _, data.iloc[:, 1] = bandpass_filter(data.iloc[:, 1].to_numpy(), low_cut_off, high_cut_off, fs)
+    _, _, data.iloc[:, 2] = bandpass_filter(data.iloc[:, 2].to_numpy(), low_cut_off, high_cut_off, fs)
+    _, _, data.iloc[:, 3] = bandpass_filter(data.iloc[:, 3].to_numpy(), low_cut_off, high_cut_off, fs)
+
+    return data
+
+
+def run(dataset, device1, device2, base_freq, noise):
     if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
         print('mmd results already exist')
         return
@@ -103,20 +127,23 @@ def run(dataset, device1, device2, base_freq):
         # normalization
         # full_2_x = normalization(full_2_x)
 
-
         if data_name == 'harvar_maxim':
             train_sampling_rate = 25
-        if data_name == 'harvar_empat':
+        elif data_name == 'harvar_empat':
             train_sampling_rate = 64
-        if data_name == 'harvar_bluesense':
+        elif data_name == 'harvar_bluesense':
             train_sampling_rate = 100
+        elif data_name == 'realdisp':
+            train_sampling_rate = 50
 
         if test_data_name == 'harvar_maxim':
             test_sampling_rate = 25
-        if test_data_name == 'harvar_empat':
+        elif test_data_name == 'harvar_empat':
             test_sampling_rate = 64
-        if test_data_name == 'harvar_bluesense':
+        elif test_data_name == 'harvar_bluesense':
             test_sampling_rate = 100
+        elif test_data_name == 'realdisp':
+            test_sampling_rate = 50
 
         participants = HARVAR_CV
 
@@ -179,6 +206,10 @@ def run(dataset, device1, device2, base_freq):
                 test = resample_data(test, test_sampling_rate, base_freq)
                 train = resample_data(train, train_sampling_rate, base_freq)
 
+            if noise == "Y":
+                train = noise_band_filter_3D(train, 0.5, 40, base_freq)
+                test = noise_band_filter_3D(test, 0.5, 40, base_freq)
+
             # get mmd distance for Acc_X, Acc_Y, Acc_Z
             mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
 
@@ -198,8 +229,8 @@ def run(dataset, device1, device2, base_freq):
 
 
 args = parser.parse_args()
-run(args.dataset, args.device_train, args.device_test, int(args.base_freq))
-run(args.dataset, args.device_test, args.device_train, int(args.base_freq))
-run(args.dataset, args.device_train, args.device_train, int(args.base_freq))
-run(args.dataset, args.device_test, args.device_test, int(args.base_freq))
+run(args.dataset, args.device_train, args.device_test, int(args.base_freq), args.noise)
+run(args.dataset, args.device_test, args.device_train, int(args.base_freq), args.noise)
+run(args.dataset, args.device_train, args.device_train, int(args.base_freq), args.noise)
+run(args.dataset, args.device_test, args.device_test, int(args.base_freq), args.noise)
 # run('harvar', 'empatica-left', 'bluesense-LWR')
