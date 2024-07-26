@@ -133,8 +133,7 @@ def run(dataset, device1, device2, base_freq, noise):
             train_sampling_rate = 64
         elif data_name == 'harvar_bluesense':
             train_sampling_rate = 100
-        elif data_name == 'realdisp':
-            train_sampling_rate = 50
+
 
         if test_data_name == 'harvar_maxim':
             test_sampling_rate = 25
@@ -142,12 +141,13 @@ def run(dataset, device1, device2, base_freq, noise):
             test_sampling_rate = 64
         elif test_data_name == 'harvar_bluesense':
             test_sampling_rate = 100
-        elif test_data_name == 'realdisp':
-            test_sampling_rate = 50
+
 
         participants = HARVAR_CV
 
     else:
+        train_sampling_rate = 50
+        test_sampling_rate = 50
         data_name = None
         test_data_name = None
         data_utils = REALDISPUtils()
@@ -207,8 +207,8 @@ def run(dataset, device1, device2, base_freq, noise):
                 train = resample_data(train, train_sampling_rate, base_freq)
 
             if noise == "Y":
-                train = noise_band_filter_3D(train, 0.5, 40, base_freq)
-                test = noise_band_filter_3D(test, 0.5, 40, base_freq)
+                train = noise_band_filter_3D(train, 0.5, 40, train_sampling_rate)
+                test = noise_band_filter_3D(test, 0.5, 40, test_sampling_rate)
 
             # get mmd distance for Acc_X, Acc_Y, Acc_Z
             mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
