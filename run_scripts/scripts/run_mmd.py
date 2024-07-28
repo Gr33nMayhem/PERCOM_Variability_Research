@@ -90,9 +90,9 @@ def noise_band_filter_3D(data, low_cut_off, high_cut_off, fs):
     if data.shape[0] == 0:
         return data
 
-    _, _, data.iloc[:, 1] = bandpass_filter(data.iloc[:, 1].to_numpy(), low_cut_off, high_cut_off, fs)
-    _, _, data.iloc[:, 2] = bandpass_filter(data.iloc[:, 2].to_numpy(), low_cut_off, high_cut_off, fs)
-    _, _, data.iloc[:, 3] = bandpass_filter(data.iloc[:, 3].to_numpy(), low_cut_off, high_cut_off, fs)
+    _, _, data[:, 0] = bandpass_filter(data[:, 0], low_cut_off, high_cut_off, fs)
+    _, _, data[:, 1] = bandpass_filter(data[:, 1], low_cut_off, high_cut_off, fs)
+    _, _, data[:, 2] = bandpass_filter(data[:, 2], low_cut_off, high_cut_off, fs)
 
     return data
 
@@ -134,14 +134,12 @@ def run(dataset, device1, device2, base_freq, noise):
         elif data_name == 'harvar_bluesense':
             train_sampling_rate = 100
 
-
         if test_data_name == 'harvar_maxim':
             test_sampling_rate = 25
         elif test_data_name == 'harvar_empat':
             test_sampling_rate = 64
         elif test_data_name == 'harvar_bluesense':
             test_sampling_rate = 100
-
 
         participants = HARVAR_CV
 
@@ -233,4 +231,4 @@ run(args.dataset, args.device_train, args.device_test, int(args.base_freq), args
 run(args.dataset, args.device_test, args.device_train, int(args.base_freq), args.noise)
 run(args.dataset, args.device_train, args.device_train, int(args.base_freq), args.noise)
 run(args.dataset, args.device_test, args.device_test, int(args.base_freq), args.noise)
-# run('harvar', 'empatica-left', 'bluesense-LWR')
+# run('realdisp', 'LLA-ideal', 'LLA-self', -1, "Y")
