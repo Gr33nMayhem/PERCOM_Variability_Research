@@ -14,7 +14,6 @@ from dataloaders.dataloader_REALDISP_har import REALDISPUtils
 from dataloaders.dataloader_REALDISP_har import REALDISP_CV
 
 from dataloaders.utils import Normalizer
-from configs.config_consts import REALDISP_CV, HARVAR_CV
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -3,7 +3,6 @@ import numpy as np
 import os
 from scipy.signal import butter, lfilter
 from dataloaders.dataloader_base import BASE_DATA
-from configs.config_consts import HARVAR_CV
 from scipy.signal import resample
 
 HARVAR_CV = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17]
