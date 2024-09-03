@@ -60,7 +60,10 @@ class BASE_DATA():
             self.data_name = args.test_data_name
             self.device = args.test_device
             self.windowsize = args.test_windowsize
-            self.freq = args.test_sampling_freq
+            if args.overwrite_sampling_rate:
+                self.freq = args.new_sampling_freq
+            else:
+                self.freq = args.test_sampling_freq
         else:
             self.root_path = args.root_path
             self.freq_save_path = args.freq_save_path

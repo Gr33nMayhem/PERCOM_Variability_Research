@@ -17,7 +17,6 @@ from dataloaders.dataloader_REALDISP_har import REALDISP_CV
 
 from dataloaders.utils import Normalizer
 
-
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser()
@@ -185,7 +184,7 @@ def run(dataset, device1, device2, base_freq, noise):
 
             # if either of the test and train is empty, skip the cv. empty due to data missing.
             if train.shape[0] == 0 or test.shape[0] == 0:
-                print('Skipping cv', i)
+                print('Skipping activity ' + str(j) + " in cv " + str(i))
                 continue
 
             # drop the activity column

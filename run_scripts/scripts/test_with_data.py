@@ -150,10 +150,7 @@ def run_test_process_with_data(model_device, test_device, freq="-1", noise="Y", 
     args.sampling_freq = config["sampling_freq"]
     args.num_classes = config["num_classes"]
     window_seconds = config["window_seconds"]
-    if args.overwrite_sampling_rate:
-        args.windowsize = int(window_seconds * args.new_sampling_freq)
-    else:
-        args.windowsize = int(window_seconds * args.sampling_freq)
+    args.windowsize = int(window_seconds * args.sampling_freq)
 
     args.input_length = args.windowsize
     # input information
@@ -165,7 +162,10 @@ def run_test_process_with_data(model_device, test_device, freq="-1", noise="Y", 
     args.test_sampling_freq = config["sampling_freq"]
     args.test_num_classes = config["num_classes"]
     window_seconds = config["window_seconds"]
-    args.test_windowsize = int(window_seconds * args.test_sampling_freq)
+    if args.overwrite_sampling_rate:
+        args.test_windowsize = int(window_seconds * args.new_sampling_freq)
+    else:
+        args.test_windowsize = int(window_seconds * args.test_sampling_freq)
     args.test_input_length = args.test_windowsize
     # input information
     args.test_c_in = config["num_channels"]
