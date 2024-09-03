@@ -5,6 +5,8 @@ import os
 import pickle
 from tqdm import tqdm
 
+from .dataloader_HHAR_har import HHAR_HAR_DATA_loader
+from .dataloader_HARVAR_har import HARVAR_HAR_DATA_loader
 from .dataloader_REALDISP_har import REALDISP_HAR_DATA_loader
 
 # from dataloaders.utils import PrepareWavelets,FiltersExtention
@@ -57,10 +59,12 @@ data_dict = {"ucihar" : UCI_HAR_DATA,
              "ward"     : WARD_HAR_DATA}
 
 """
-from .dataloader_HARVAR_har import HARVAR_HAR_DATA_loader
 
 data_dict = {"harvar_empat": HARVAR_HAR_DATA_loader, "harvar_maxim": HARVAR_HAR_DATA_loader,
-             "harvar_bluesense": HARVAR_HAR_DATA_loader, "realdisp": REALDISP_HAR_DATA_loader, }
+             "harvar_bluesense": HARVAR_HAR_DATA_loader, "realdisp": REALDISP_HAR_DATA_loader,
+             "hhar_gear": HHAR_HAR_DATA_loader, "hhar_lgwatch": HHAR_HAR_DATA_loader,
+             "hhar_nexus": HHAR_HAR_DATA_loader, "hhar_s3": HHAR_HAR_DATA_loader,
+             "hhar_samsung": HHAR_HAR_DATA_loader}
 
 
 class data_set(Dataset):

@@ -2,10 +2,10 @@
 #SBATCH --account=def-plago
 #SBATCH --export=ALL,DISABLE_DCGM=1
 #SBATCH --gpus-per-node=v100:1
-#SBATCH --mem=128G
+#SBATCH --mem=80G
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=16
-#SBATCH --time=60:0:0
+#SBATCH --ntasks-per-node=6
+#SBATCH --time=48:0:0
 #SBATCH --mail-user=Gr33nMayhem@gmail.com
 #SBATCH --mail-type=ALL
 
@@ -18,4 +18,4 @@ module purge
 module load StdEnv/2020
 module load python/3.11 scipy-stack
 source ~/py311/bin/activate
-python run_training.py --device "$1"
+python run_training.py --device "$1" --freq "$2" --noise "$3" --norm "$4"

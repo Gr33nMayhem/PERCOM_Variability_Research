@@ -1,15 +1,13 @@
-import torch
-import sys
-import os
-import pandas as pd
-import numpy as np
 import argparse
-import yaml
-from scipy.interpolate import interp1d
+import os
+import sys
+
+import pandas as pd
+import torch
 
 sys.path.append(os.path.join("..", ".."))
-from mmd.mmd import MMD_with_sample
-from scipy.signal import resample, butter, filtfilt
+from mmd.mmd import MMD_with_freq
+from scipy.signal import resample
 from dataloaders.dataloader_HARVAR_har import HARVARUtils
 from dataloaders.dataloader_HARVAR_har import HARVAR_CV
 from dataloaders.dataloader_REALDISP_har import REALDISPUtils
@@ -23,8 +21,6 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, help='Dataset Name')
 parser.add_argument('--device_train', type=str, help='Device Name of training')
 parser.add_argument('--device_test', type=str, help='Device Name of testing')
-parser.add_argument('--base_freq', type=int, help='Base Frequency for resampling')
-parser.add_argument('--noise', type=str, help='Noise removal from data, Y/N')
 
 load_only_walking = True
 
@@ -53,51 +49,9 @@ def resample_data(data_x, orig_sampling_rate, new_sampling_rate):
     return data_x
 
 
-def interpolate_data(data_x, orig_sampling_rate, new_sampling_rate):
-    data_len_orig = data_x.shape[0]
-    data_len_new = int(data_len_orig * new_sampling_rate / orig_sampling_rate)
-
-    # Original and new time indices
-    orig_indices = np.arange(data_len_orig)
-    new_indices = np.linspace(0, data_len_orig - 1, data_len_new)
-
-    # Initialize resampled data
-    data_x_resampled = np.zeros((data_len_new, data_x.shape[1]))
-
-    for i in range(data_x.shape[1]):
-        # Create a linear interpolator for each channel
-        interpolator = interp1d(orig_indices, data_x[:, i], kind='linear')
-        # Use the interpolator to get the new data points
-        data_x_resampled[:, i] = interpolator(new_indices)
-
-    return data_x_resampled
-
-
-def bandpass_filter(data, low_cut_off, high_cut_off, fs=100):
-    low = low_cut_off / fs
-    high = high_cut_off / fs
-    order = 2
-    b, a = butter(order, [low, high], btype='band')
-    y = filtfilt(b, a, data)
-    return b, a, y
-
-
-def noise_band_filter_3D(data, low_cut_off, high_cut_off, fs):
-    """
-    **ONLY USE THIS FOR 3 Channel Data !!!!!**
-    """
-    if data.shape[0] == 0:
-        return data
-
-    _, _, data[:, 0] = bandpass_filter(data[:, 0], low_cut_off, high_cut_off, fs)
-    _, _, data[:, 1] = bandpass_filter(data[:, 1], low_cut_off, high_cut_off, fs)
-    _, _, data[:, 2] = bandpass_filter(data[:, 2], low_cut_off, high_cut_off, fs)
-
-    return data
-
-
-def run(dataset, device1, device2, base_freq, noise):
-    if os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
+def run(dataset, device1, device2):
+    if os.path.exists(
+            os.path.join('..', '..', 'data', 'mmd', 'freq', 'mmd_results_' + device1 + '_' + device2 + '.csv')):
         print('mmd results already exist')
         return
 
@@ -121,49 +75,45 @@ def run(dataset, device1, device2, base_freq, noise):
         # iterating through 8 cv
         full_1_x, full_1_y = data_utils.load_all_the_data_harvar(device1, HARVAR_CV, load_only_walking)
         # normalization
-        # full_1_x = normalization(full_1_x)
+        full_1_x = normalization(full_1_x)
         full_2_x, full_2_y = data_utils.load_all_the_data_harvar(device2, HARVAR_CV, load_only_walking)
         # normalization
-        # full_2_x = normalization(full_2_x)
+        full_2_x = normalization(full_2_x)
 
         if data_name == 'harvar_maxim':
             train_sampling_rate = 25
-        elif data_name == 'harvar_empat':
+        if data_name == 'harvar_empat':
             train_sampling_rate = 64
-        elif data_name == 'harvar_bluesense':
+        if data_name == 'harvar_bluesense':
             train_sampling_rate = 100
 
         if test_data_name == 'harvar_maxim':
             test_sampling_rate = 25
-        elif test_data_name == 'harvar_empat':
+        if test_data_name == 'harvar_empat':
             test_sampling_rate = 64
-        elif test_data_name == 'harvar_bluesense':
+        if test_data_name == 'harvar_bluesense':
             test_sampling_rate = 100
 
         participants = HARVAR_CV
 
     else:
-        train_sampling_rate = 50
-        test_sampling_rate = 50
-        data_name = None
-        test_data_name = None
         data_utils = REALDISPUtils()
         root_path = os.path.join('..', '..', 'data', 'realdisp')
         # realdisp
         # iterating through 34 cv
         full_1_x, full_1_y = data_utils.load_all_the_data_realdisp(root_path, device1, REALDISP_CV)
         # normalization
-        # full_1_x = normalization(full_1_x)
+        full_1_x = normalization(full_1_x)
         full_2_x, full_2_y = data_utils.load_all_the_data_realdisp(root_path, device2, REALDISP_CV)
         # normalization
-        # full_2_x = normalization(full_2_x)
+        full_2_x = normalization(full_2_x)
         participants = REALDISP_CV
 
     # bandwidth ranges
     bandwidth_range = [0.2, 0.5, 0.9, 1.3, 1.5, 1.6]
 
     # create a dataframe to store the mean mmd results on 3 axis
-    mean_mmd = pd.DataFrame(columns=['CV', 'activity', 'mmd', 'std_div_mmd'])
+    mean_mmd = pd.DataFrame(columns=['CV', 'activity', 'mean_mmd_x', 'mean_mmd_y', 'mean_mmd_z'])
 
     full_1_x = pd.concat([full_1_x, full_1_y], axis=1)
     full_2_x = pd.concat([full_2_x, full_2_y], axis=1)
@@ -180,11 +130,9 @@ def run(dataset, device1, device2, base_freq, noise):
             train = full_1_x_activity[full_1_x_activity['sub_id'] != i]
             test = full_2_x_activity[full_2_x_activity['sub_id'] == i]
 
-            train, test = normalization(train, test)
-
             # if either of the test and train is empty, skip the cv. empty due to data missing.
             if train.shape[0] == 0 or test.shape[0] == 0:
-                print('Skipping activity ' + str(j) + " in cv " + str(i))
+                print('Skipping cv', i)
                 continue
 
             # drop the activity column
@@ -195,39 +143,32 @@ def run(dataset, device1, device2, base_freq, noise):
             train = train.iloc[:, 1:-1].to_numpy()
             test = test.iloc[:, 1:-1].to_numpy()
 
-            if base_freq == -1:
-                if data_name is not None and data_name != test_data_name:
-                    # resample the data
-                    test = interpolate_data(test, test_sampling_rate, train_sampling_rate)
-            else:
-                test = resample_data(test, test_sampling_rate, base_freq)
-                train = resample_data(train, train_sampling_rate, base_freq)
-
-            if noise == "Y":
-                train = noise_band_filter_3D(train, 0.5, 40, train_sampling_rate)
-                test = noise_band_filter_3D(test, 0.5, 40, test_sampling_rate)
+            if data_name != test_data_name:
+                # resample the data
+                test = resample_data(test, test_sampling_rate, train_sampling_rate)
 
             # get mmd distance for Acc_X, Acc_Y, Acc_Z
-            mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
-
-            # mean_mmd_y, std_div_y = MMD_with_sample(train[:, 1], test[:, 1], 100, 50000, 'multiscale', bandwidth_range)
-            # mean_mmd_z, std_div_z = MMD_with_sample(train[:, 2], test[:, 2], 100, 50000, 'multiscale', bandwidth_range)
+            # mmd, mmd_std_div = MMD_with_sample(train, test, 100, 50000, 'multiscale', bandwidth_range)
+            mean_mmd_x = MMD_with_freq(train[:, 0], test[:, 0], 10000, 'multiscale', bandwidth_range)
+            mean_mmd_y = MMD_with_freq(train[:, 1], test[:, 1], 10000, 'multiscale', bandwidth_range)
+            mean_mmd_z = MMD_with_freq(train[:, 2], test[:, 2], 10000, 'multiscale', bandwidth_range)
             # store the results in the dataframe
             mean_mmd = pd.concat(
                 [mean_mmd,
-                 pd.DataFrame({'CV': i, 'mmd': mmd, 'std_div_mmd': mmd_std_div, 'activity': j},
+                 pd.DataFrame({'CV': i, 'mean_mmd_x': mean_mmd_x, 'mean_mmd_y': mean_mmd_y,
+                               'mean_mmd_z': mean_mmd_z, 'activity': j},
                               index=[0])],
                 ignore_index=True)
     # save the results in a csv file
-    if not os.path.exists(os.path.join('..', '..', 'data', 'mmd')):
-        os.makedirs(os.path.join('..', '..', 'data', 'mmd'))
-    mean_mmd.to_csv(os.path.join('..', '..', 'data', 'mmd', 'mmd_results_' + device1 + '_' + device2 + '.csv'),
+    if not os.path.exists(os.path.join('..', '..', 'data', 'mmd', 'freq')):
+        os.makedirs(os.path.join('..', '..', 'data', 'mmd', 'freq'))
+    mean_mmd.to_csv(os.path.join('..', '..', 'data', 'mmd', 'freq', 'mmd_results_' + device1 + '_' + device2 + '.csv'),
                     index=False)
 
 
 args = parser.parse_args()
-run(args.dataset, args.device_train, args.device_test, int(args.base_freq), args.noise)
-run(args.dataset, args.device_test, args.device_train, int(args.base_freq), args.noise)
-run(args.dataset, args.device_train, args.device_train, int(args.base_freq), args.noise)
-run(args.dataset, args.device_test, args.device_test, int(args.base_freq), args.noise)
-# run('realdisp', 'LLA-ideal', 'LLA-self', -1, "Y")
+run(args.dataset, args.device_train, args.device_test)
+run(args.dataset, args.device_test, args.device_train)
+run(args.dataset, args.device_train, args.device_train)
+run(args.dataset, args.device_test, args.device_test)
+# run('harvar', 'empatica-left', 'bluesense-LWR')

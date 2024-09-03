@@ -17,7 +17,7 @@ The method will test the models using three architectures: TinyHAR, Conv-LSTM, a
 '''
 
 
-def run_test_process_with_data(model_device, test_device):
+def run_test_process_with_data(model_device, test_device, freq="-1", noise="Y", norm="standardization"):
     print("started running test process...")
 
     class dotdict(dict):
@@ -28,13 +28,22 @@ def run_test_process_with_data(model_device, test_device):
 
     args = dotdict()
     # TODO change the path as relative path
-    args.to_save_path = r"../../data/Run_logs" + "/" + str(model_device)
-    args.freq_save_path = r"../../data/Freq_data"
-    args.window_save_path = r"../../data/Sliding_window" + "/" + str(test_device)
+    path_modifier = ""
+    if noise == "Y":
+        path_modifier = "/no_noise"
+    elif norm == "minmax":
+        path_modifier = "/no_norm"
+    elif freq != "-1":
+        path_modifier = "/no_resamp"
+    else:
+        path_modifier = ""
+    args.to_save_path = r"../../data" + path_modifier + "/Run_logs" + "/" + str(model_device)
+    args.freq_save_path = r"../../data" + path_modifier + "/Freq_data"
+    args.window_save_path = r"../../data" + path_modifier + "/Sliding_window" + "/" + str(test_device)
     args.main_root_path = r"../.."
     args.device = model_device
     args.drop_transition = False
-    args.datanorm_type = "standardization"  # None ,"standardization", "minmax"
+    args.datanorm_type = norm  # None ,"standardization", "minmax"
     args.filter_scaling_factor = 1
     args.batch_size = 256
     args.shuffle = True
@@ -61,6 +70,16 @@ def run_test_process_with_data(model_device, test_device):
         args.data_name = 'harvar_empat'
     elif model_device.find("bluesense") != -1:
         args.data_name = 'harvar_bluesense'
+    elif model_device.find("gear") != -1:
+        args.data_name = 'hhar_gear'
+    elif model_device.find("lgwatch") != -1:
+        args.data_name = 'hhar_lgwatch'
+    elif model_device.find("nexus") != -1:
+        args.data_name = 'hhar_nexus'
+    elif model_device.find("s3") != -1:
+        args.data_name = 'hhar_s3'
+    elif model_device.find("samsung") != -1:
+        args.data_name = 'hhar_samsung'
     else:
         args.data_name = 'realdisp'
 
@@ -72,8 +91,35 @@ def run_test_process_with_data(model_device, test_device):
         args.test_data_name = 'harvar_empat'
     elif test_device.find("bluesense") != -1:
         args.test_data_name = 'harvar_bluesense'
+    elif test_device.find("gear") != -1:
+        args.test_data_name = 'hhar_gear'
+    elif test_device.find("lgwatch") != -1:
+        args.test_data_name = 'hhar_lgwatch'
+    elif test_device.find("nexus") != -1:
+        args.test_data_name = 'hhar_nexus'
+    elif test_device.find("s3") != -1:
+        args.test_data_name = 'hhar_s3'
+    elif test_device.find("samsung") != -1:
+        args.test_data_name = 'hhar_samsung'
     else:
         args.test_data_name = 'realdisp'
+
+    ''' Change this if you wish to train the model with different sampling rate.'''
+    if freq is not None and freq != "" and int(freq) != -1:
+        args.overwrite_sampling_rate = True
+        args.new_sampling_freq = int(freq)
+    else:
+        args.overwrite_sampling_rate = False
+        args.new_sampling_freq = -1
+
+    if noise == "Y":
+        args.needs_noise_clean = True
+        args.lowcut = 0.5
+        args.highcut = 40
+    else:
+        args.needs_noise_clean = False
+        args.lowcut = 0
+        args.highcut = 0
 
     args.wavelet_filtering = False
     args.wavelet_filtering_regularization = False
@@ -105,6 +151,7 @@ def run_test_process_with_data(model_device, test_device):
     args.num_classes = config["num_classes"]
     window_seconds = config["window_seconds"]
     args.windowsize = int(window_seconds * args.sampling_freq)
+
     args.input_length = args.windowsize
     # input information
     args.c_in = config["num_channels"]
@@ -115,7 +162,10 @@ def run_test_process_with_data(model_device, test_device):
     args.test_sampling_freq = config["sampling_freq"]
     args.test_num_classes = config["num_classes"]
     window_seconds = config["window_seconds"]
-    args.test_windowsize = int(window_seconds * args.test_sampling_freq)
+    if args.overwrite_sampling_rate:
+        args.test_windowsize = int(window_seconds * args.new_sampling_freq)
+    else:
+        args.test_windowsize = int(window_seconds * args.test_sampling_freq)
     args.test_input_length = args.test_windowsize
     # input information
     args.test_c_in = config["num_channels"]

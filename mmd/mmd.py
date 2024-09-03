@@ -1,7 +1,24 @@
+# Import the required packages
 import numpy as np
 import torch
-from scipy.special import kl_div
+from scipy.signal import resample
+from scipy.fft import rfft
+from scipy.signal import butter, filtfilt
 
+
+def lowpass_filter(data, low_cut_off=1, fs=400):
+    b, a = butter(4, low_cut_off, fs=fs, btype='lowpass', analog=False)
+    y = filtfilt(b, a, data)
+    return b, a, y
+
+
+def bandpass_filter(data, low_cut_off, high_cut_off, fs=400):
+    low = low_cut_off / fs
+    high = high_cut_off / fs
+    order = 2
+    b, a = butter(order, [low, high], btype='band')
+    y = filtfilt(b, a, data)
+    return b, a, y
 
 def MMD(x, y, kernel, bandwidth_range):
     """Emprical maximum mean discrepancy. The lower the result
@@ -41,7 +58,7 @@ def MMD_with_sample(x, y, split_size, iterations, kernal, bandwidth_range):
     # print the shape of x and y
     print(x.shape)
     print(y.shape)
-    '''Big brain time'''
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     all_mmd = []
     # all_kldv = []
@@ -65,3 +82,28 @@ def MMD_with_sample(x, y, split_size, iterations, kernal, bandwidth_range):
     # std_dev_kldv = np.std(all_kldv)
 
     return mean_mmd, std_dev_mmd, #mean_kldv, std_dev_kldv
+
+def MMD_with_freq(x, y, sample_size, kernal, bandwidth_range):
+    # print the shape of x and y
+    print(x.shape)
+    print(y.shape)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+    new_test = bandpass_filter(x, 0.5, 60, 64)
+    N = len(new_test[2])
+    normalize = N / 2
+    resampled_x = resample(2 * np.abs(rfft(new_test[2])) / N, sample_size)
+
+
+    new_test = bandpass_filter(y, 0.5, 60, 64)
+    N = len(new_test[2])
+    normalize = N / 2
+    resampled_y = resample(2 * np.abs(rfft(new_test[2])) / N, sample_size)
+    tensor_a = torch.from_numpy(np.reshape(resampled_x, (len(resampled_x), 1))).to(device)
+    tensor_b = torch.from_numpy(np.reshape(resampled_y, (len(resampled_y), 1))).to(device)
+
+    mmd = MMD(tensor_a, tensor_b, kernal, bandwidth_range).item()
+
+    return mmd

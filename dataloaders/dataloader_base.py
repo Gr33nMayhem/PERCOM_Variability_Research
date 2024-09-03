@@ -12,6 +12,9 @@ from dataloaders.utils import Normalizer, components_selection_one_signal, mag_3
 from sklearn.utils import class_weight
 from skimage.transform import resize
 
+from scipy.signal import butter, lfilter
+from scipy.signal import filtfilt
+
 freq1 = 0.3
 freq2 = 20
 
@@ -57,14 +60,20 @@ class BASE_DATA():
             self.data_name = args.test_data_name
             self.device = args.test_device
             self.windowsize = args.test_windowsize
-            self.freq = args.test_sampling_freq
+            if args.overwrite_sampling_rate:
+                self.freq = args.new_sampling_freq
+            else:
+                self.freq = args.test_sampling_freq
         else:
             self.root_path = args.root_path
             self.freq_save_path = args.freq_save_path
             self.data_name = args.data_name
             self.device = args.device
             self.windowsize = args.windowsize
-            self.freq = args.sampling_freq
+            if args.overwrite_sampling_rate:
+                self.freq = args.new_sampling_freq
+            else:
+                self.freq = args.sampling_freq
 
         self.window_save_path = args.window_save_path
         window_save_path = os.path.join(self.window_save_path, self.data_name)
@@ -131,6 +140,9 @@ class BASE_DATA():
         self.num_of_cv = len(self.LOCV_keys)
         self.index_of_cv = 0
 
+        self.needs_noise_clean = args.needs_noise_clean
+        self.lowcut = args.lowcut
+        self.highcut = args.highcut
 
     def update_train_val_test_keys(self):
         """
@@ -156,16 +168,23 @@ class BASE_DATA():
                 # update the index_of_cv for the next iteration
                 self.index_of_cv = self.index_of_cv + 1
 
-
-            # Normalization the data
+            print("training with the following participants: ", self.train_keys)
+            print("testing with the following participants: ", self.test_keys)
+            # Normalization the data and noise removal if necessary
             train_vali_x = pd.DataFrame()
             for sub in self.train_keys:
                 temp = self.data_x[(self.data_x[self.split_tag] == sub)]
+                # clean noise if needed
+                if self.needs_noise_clean:
+                    temp = self.noise_band_filter_3D(temp, self.lowcut, self.highcut, self.freq)
                 train_vali_x = pd.concat([train_vali_x, temp])
 
             test_x = pd.DataFrame()
             for sub in self.test_keys:
                 temp = self.data_x[(self.data_x[self.split_tag] == sub)]
+                # clean noise if needed
+                if self.needs_noise_clean:
+                    temp = self.noise_band_filter_3D(temp, self.lowcut, self.highcut, self.freq)
                 test_x = pd.concat([test_x, temp])
 
             train_vali_x, test_x = self.normalization(train_vali_x, test_x)
@@ -177,7 +196,6 @@ class BASE_DATA():
 
             for sub in self.test_keys:
                 all_test_keys.extend(self.sub_ids_of_each_sub[sub])
-
 
             # -----------------test_window_index---------------------
             test_file_name = os.path.join(self.window_save_path,
@@ -219,8 +237,9 @@ class BASE_DATA():
                     pickle.dump(train_vali_window_index, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
             random.shuffle(train_vali_window_index)
-            self.train_window_index = train_vali_window_index[:int(self.train_vali_quote*len(train_vali_window_index))]
-            self.vali_window_index = train_vali_window_index[int(self.train_vali_quote*len(train_vali_window_index)):]
+            self.train_window_index = train_vali_window_index[
+                                      :int(self.train_vali_quote * len(train_vali_window_index))]
+            self.vali_window_index = train_vali_window_index[int(self.train_vali_quote * len(train_vali_window_index)):]
 
         else:
             raise NotImplementedError
@@ -322,6 +341,29 @@ class BASE_DATA():
         data = pd.concat([data, df.iloc[:, -1]], axis=1)
 
         return data.reset_index()
+
+    # remove frequencies below 1Hz and above 5Hz
+    def bandpass_filter(self, data, low_cut_off, high_cut_off, fs=100):
+        low = low_cut_off / fs
+        high = high_cut_off / fs
+        order = 2
+        b, a = butter(order, [low, high], btype='band')
+        y = filtfilt(b, a, data)
+        return b, a, y
+
+    def noise_band_filter_3D(self, data, low_cut_off, high_cut_off, fs):
+        """
+        data : 3D numpy array [n_samples, n_channels, n_timepoints]
+        **ONLY USE THIS FOR 3 Channel Data !!!!!**
+        """
+        if data.shape[0] == 0:
+            return data
+
+        _, _, data.iloc[:, 1] = self.bandpass_filter(data.iloc[:, 1].to_numpy(), low_cut_off, high_cut_off, fs)
+        _, _, data.iloc[:, 2] = self.bandpass_filter(data.iloc[:, 2].to_numpy(), low_cut_off, high_cut_off, fs)
+        _, _, data.iloc[:, 3] = self.bandpass_filter(data.iloc[:, 3].to_numpy(), low_cut_off, high_cut_off, fs)
+
+        return data
 
     def normalization(self, train_vali, test=None):
         train_vali_sensors = train_vali.iloc[:, 1:-1]
@@ -463,7 +505,6 @@ class BASE_DATA():
                 resize_flag = False
 
             freq_file_name = []
-
 
             """TODO: Change this when using spectrogram"""
             temp_data = self.normalization(self.data_x.copy())
